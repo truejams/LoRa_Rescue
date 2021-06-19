@@ -1,6 +1,4 @@
 # LoRa_Rescue
 Thesis Python Code
 
-<html>
-  <head> TrueJamols </head>
-</html>
+12k OJT Tuition fee.

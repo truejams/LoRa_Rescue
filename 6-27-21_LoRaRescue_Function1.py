@@ -21,21 +21,6 @@ import csv
 arduino = serial.Serial('com5', 115200)
 ts = time.localtime() #update time
 
-#Define variables for use
-
-# distanceA = list()
-# distanceB = list()
-# distanceC = list()
-
-# okA = 0
-# okB = 0
-# okC = 0
-# ok = 0
-
-# phoneA = 0
-# phoneB = 1
-# phoneC = 2
-
 ###### CHANGE THIS FOR YOUR DIRECTORY
 ################################################################
 save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\6-27-21_LoRaRescue_Function1.py\\"

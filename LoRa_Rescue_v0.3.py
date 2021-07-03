@@ -19,6 +19,7 @@ from scipy.optimize import *
 import serial
 import time
 import math
+from math import radians, cos, sin, asin, sqrt
 from datetime import datetime as dt
 import csv
 
@@ -53,9 +54,16 @@ roRSSI = -32
 # Format: A B C
 xg = np.array([0,2,0])
 yg = np.array([0,0,2])
-# Actual Node Position
+# GNode Position
+# Format: A B C
+longg = np.array([0,0,0])
+latg = np.array([0,0,0])
+# Actual Node Coordinates
 xAct = 1.3       #Target x-coordinate
-yAct = 1          #Target y-coordinat
+yAct = 1         #Target y-coordinat
+# Actual Node Position
+longAct = 0
+latAct = 0
 # For filtering
 errorTolerance = 10
 
@@ -296,6 +304,25 @@ def kmeansOptimize(data):
     kmeans = KMeans(n_clusters=elbow.knee, n_init=5).fit(data)
 
     return kmeans,inertia,elbow
+
+def haversine(lat1, lon1, lat2, lon2):
+
+    miles = 3959.87433
+    km = 6372.8
+
+    R = km
+
+    dLat = radians(lat2 - lat1)
+    dLon = radians(lon2 - lon1)
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+
+    a = sin(dLat/2)**2 + cos(lat1)*cos(lat2)*sin(dLon/2)**2
+    c = 2*asin(sqrt(a))
+
+    distance = R * c
+
+    return distance
 
 # Listen to COM port and check for errors
 rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)

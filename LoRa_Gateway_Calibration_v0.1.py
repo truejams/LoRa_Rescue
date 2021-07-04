@@ -1,4 +1,13 @@
 # LoRa Rescue Calibration Code
+# build v0.1
+# This code has been tested indoors with LOS environment
+# The mobile node was placed 2.5 meters away
+# The result showed an optimal path loss exponent of 9.9
+
+# To use the code no editing of the arduino code will be necessary
+# Simply plug the gateway and transmit data from the mobile node
+# It is noted that only gateway A shall be used for calibration.
+
 from numpy.lib.nanfunctions import nanmax, nanmin
 from sklearn.cluster import KMeans
 import numpy as np

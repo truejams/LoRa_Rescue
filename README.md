@@ -14,3 +14,14 @@ Revised build v0.3.1
 - Added Haversine function made be Benj
   - Created new variables to stare longitude and latitude values
   - Have not implemented the function for error checking
+
+# LoRa Rescue Calibration Code
+build v0.1
+- This code has been tested indoors with LOS environment
+- The mobile node was placed 2.5 meters away
+- The result showed an optimal path loss exponent of 9.9
+
+Use information
+- To use the code no editing of the arduino code will be necessary
+- Simply plug the gateway and transmit data from the mobile node
+- It is noted that only gateway A shall be used for calibration.

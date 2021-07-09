@@ -15,7 +15,7 @@ Revised build v0.3.1
   - Created new variables to stare longitude and latitude values
   - Have not implemented the function for error checking
 
-Revised build v0.4 [Ianny]
+Revised build v0.4.1 [Ianny]
 - Added function for GPS to Cartesian Coordinate Converter
 - Added optional function for Cartesian to GPS Converter
 - Code now converts GPS coordinates of GNodes and Actual Position to Cartesian coordinates
@@ -29,6 +29,9 @@ Revised build v0.4 [Ianny]
   - Added K-Means Centroids vs. Mean Coordinates w/ Tolerance Filter in K-Means.csv
   - Added K-Means Centroids vs. Coordinates w/ Tolerance Filter in K-Means.csv
 - Minor formatting changes in CSV ouptuts for better visualization
+
+Revised build v0.4.2 [greg]
+- Added error function with revised input and output
 
 # LoRa_Gateway_Calibration Build Logs
 Use information

@@ -33,6 +33,10 @@ Revised build v0.4.1 [Ianny]
 Revised build v0.4.2 [greg]
 - Added error function with revised input and output
 
+Revised build v0.4.3
+- Removed phoneA[0:len(phoneA)]
+- Disabled frequency distribution (Error is column length does not match)
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary

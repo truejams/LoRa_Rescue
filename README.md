@@ -30,12 +30,18 @@ Revised build v0.4.1 [Ianny]
   - Added K-Means Centroids vs. Coordinates w/ Tolerance Filter in K-Means.csv
 - Minor formatting changes in CSV ouptuts for better visualization
 
-Revised build v0.4.2 [greg]
+Revised build v0.4.2 [Greg]
 - Added error function with revised input and output
 
-Revised build v0.4.3
+Revised build v0.4.3 [Benj]
 - Removed phoneA[0:len(phoneA)]
 - Disabled frequency distribution (Error is column length does not match)
+
+Revised build v0.4.4 [Ianny]
+- Changed axes names of distance behavior graph
+- Added actual distance in distance behavior graph
+- Changed legend location in distance behavior graph for better visualization
+- Created a new function for comp_distanceAf, comp_distanceBf, and comp_distanceCf called actualDist
 
 # LoRa_Gateway_Calibration Build Logs
 Use information

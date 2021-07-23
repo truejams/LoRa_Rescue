@@ -43,6 +43,10 @@ Revised build v0.4.4 [Ianny]
 - Changed legend location in distance behavior graph for better visualization
 - Created a new function for comp_distanceAf, comp_distanceBf, and comp_distanceCf called actualDist
 
+Revised build v0.4.5 [Ianny]
+- Enabled frequency distribution
+- Fixed syntax error in frequency distribution graph code
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary

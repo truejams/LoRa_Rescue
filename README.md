@@ -47,6 +47,10 @@ Revised build v0.4.5 [Ianny]
 - Enabled frequency distribution
 - Fixed syntax error in frequency distribution graph code
 
+Revised build v0.4.6 [Ianny]
+- In the cartToGPS() function, the types of output lat and lon were changed to lists
+- Mapped the K-means graph in an html file using the folium library
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary

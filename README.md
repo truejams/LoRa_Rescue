@@ -51,6 +51,17 @@ Revised build v0.4.6 [Ianny]
 - In the cartToGPS() function, the types of output lat and lon were changed to lists
 - Mapped the K-means graph in an html file using the folium library
 
+Revised build v0.4.7 
+- Removed sklearn, serial, and datetime libraries
+- Removed listenforData() function and associated variables
+- Changed importCSV() function to Benj's Read_rawData_test.py with additional outputs
+    - The code procures data only from rawData.csv
+- "Converts" Folium Map (.html) to image file (.png)
+    - Requires chromedriver.exe which opens the HTML map in google chrome
+    - Then, Selenium snapshots the opened webpage
+    - Change browser_driver directory accordingly 
+    - Download chromedriver at: https://sites.google.com/a/chromium.org/chromedriver/downloads
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary

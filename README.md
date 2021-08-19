@@ -51,7 +51,7 @@ Revised build v0.4.6 [Ianny]
 - In the cartToGPS() function, the types of output lat and lon were changed to lists
 - Mapped the K-means graph in an html file using the folium library
 
-Revised build v0.4.7 
+Revised build v0.4.7 [Ianny]
 - Removed sklearn, serial, and datetime libraries
 - Removed listenforData() function and associated variables
 - Changed importCSV() function to Benj's Read_rawData_test.py with additional outputs

@@ -62,6 +62,17 @@ Revised build v0.4.7 [Ianny]
     - Change browser_driver directory accordingly 
     - Download chromedriver at: https://sites.google.com/a/chromium.org/chromedriver/downloads
 
+Revised build v0.4.8 [Ianny]
+- The browser_driver is the folder directory where chromedriver.exe is contained
+- Converted all output images to .jpg for minimal file size
+- Brought back the serial and datetime libraries, and the listenforData() function
+- Changed date and time naming convention from ';' to '-'
+- Adjusted title locations of RawTrilateration, FiltTrilateration, and K-Means plot
+- Added missing round() line for distSeriesA['Distance'] (used in Frequency Distribution plot)
+- Added a function for saving the output image files to Firebase Storage
+    - Added and used a Firebase Web App called 'LoRa Rescue Storage' for this
+- Used the os library to change the working directory for Pyrebase
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary

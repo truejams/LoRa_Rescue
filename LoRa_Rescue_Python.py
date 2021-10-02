@@ -1,412 +1,521 @@
-#Benj_ArduinoDataIntoArrays_withYaniCode
+# Revised build v0.4.1
+# Changelog:
+# Added function for GPS to Cartesian Coordinate Converter
+# Added optional function for Cartesian to GPS Converter
+# Code now converts GPS coordinates of GNodes and Actual Position to Cartesian coordinates
+# Removed function for Average Filter and associated lines of code
+# Removed Average Filter from CSV output
+    # Removed Mean Distances w/ Average Filter in Basic.csv
+    # Removed Distances w/ Average Filter in Distances.csv
+# Added Tolerance Filter in CSV output
+    # Added Mean Coordinates w/ Tolerance Filter in Basic.csv
+    # Added Coordinates w/ Tolerance Filter in Coordinates.csv
+    # Added K-Means Centroids vs. Mean Coordinates w/ Tolerance Filter in K-Means.csv
+    # Added K-Means Centroids vs. Coordinates w/ Tolerance Filter in K-Means.csv
+    # Minor formatting changes in CSV ouptuts for better visualization
 
-#Trilateration and K-Means Program 
+# Revised build v0.4.2
+# Changelog:
+# - Added error function with revised input and output
+# - Added plot for data frequency distribution table with all three gateways
+#   - Added import pandas and seaborn as it was used for this
+
+# new libraries:
+# pip install pandas
+# pip install pyproj
+# pip install scipy
+# pip install seaborn
+# pip install sklearn
+
+# Import Code
 from sklearn.cluster import KMeans
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import datasets
 from kneed import KneeLocator
-from scipy.optimize import fsolve
-
+from scipy.optimize import *
 import serial
 import time
-
 import math
+from math import radians, cos, sin, asin, sqrt
 from datetime import datetime as dt
 import csv
+from pyproj import CRS, Transformer
+import pandas as pd
+import seaborn as sns
 
-#############################################
-arduino = serial.Serial('com19', 115200)
+# Variable declarations
+port = 'com19'
+baud = 115200
+
 ts = time.localtime() #update time
 
 #Define variables for use
-
 distanceA = list()
 distanceB = list()
 distanceC = list()
-
 okA = 0
 okB = 0
 okC = 0
 ok = 0
-
 phoneA = 0
 phoneB = 1
 phoneC = 2
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-################################################################
-save_destination = "C:\\Users\\Grego\\LoRa Rescue Data\\"
+save_destination = "C:\\Users\\grego\\LoRa Rescue Data 2\\0.3test\\"
 
 # Distance calculation constants
 n = 3.2
 dro = 1.5
 roRSSI = -32
 
-def distConv(rssi):
-    dist = list()
-    for i in range(int(len(rssi))):
-        dist.append(pow(10,((roRSSI-int(rssi[i]))/(10*n)))*dro)
-    return dist
-def trilatEqn(z):
-    x = z[0]
-    y = z[1]
-    w = z[2]
+#Trilateration calculation constants
+# GNode Coordinates
+# Format: A B C
+xg = np.array([0,0,0])
+yg = np.array([0,0,0])
+# GNode Position
+# Format: A B C
+latg = np.array([14.687079,14.687085,14.686586])
+longg = np.array([121.074557,121.075146,121.074825])
+# Actual Node Coordinates
+xAct = np.array([0])    #Target x-coordinate
+yAct = np.array([0])    #Target y-coordinate
+# Actual Node Position
+longAct = np.array([121.074731])
+latAct = np.array([14.686970])
+# For filtering
+errorTolerance = 50
 
-    F = np.empty((3))
-    F[0] = ((x-xg[0])**2) + ((y-yg[0])**2) - (dA**2)
-    F[1] = ((x-xg[1])**2) + ((y-yg[1])**2) - (dB**2)
-    F[2] = ((x-xg[2])**2) + ((y-yg[2])**2) - (dC**2)
-    return F
-
-#Start of Program
-
-print('\nProgram started\n')
-print('Listening to the specified COM Port')
-
-#samples = 62 * 6 - 1 #how many samples to collect per gateway * number of loops total
-#line = 0 #start at 0 because our header is 0 (not real data)
-
-
-#### TURN TO FUNCTION [1]
-while ok == 0:
-
-    arduino_raw_data = arduino.readline()
-    decoded_data = str(arduino_raw_data.decode("utf-8"))
-    data = decoded_data.replace('\n','') #remove \n in the decoded data
-
-    gatewayID = data[:1] #Retrieves Gateway ID
-    dataID = data[1:2] #Retrieves Data ID
-
-    data = data[2:] #Remove Gateway ID and data ID from data
-    
-
-    count = 1
-
-    if gatewayID == 'A':
-        
-        fileName="gatewayA.csv" #set to write to gatewayA.csv
-        
-        if dataID == '1':
-            phoneA = data
-            print("\nPhone at Gateway A: 0" + phoneA)
-        if dataID == '2':
-            distanceA.append(float(data))
-        if dataID == '3':
-            
-            # 1) Get time
-            ts = time.localtime() #update time
-            timeA = time.strftime("%X", ts) #set timeA to current time
-            print("timeA: " + timeA)
-            dtn = str(dt.now())
-            dtn = dtn[0:19]
-            dtn = dtn.replace(':',';')
-
-            # 2) Put  distanceA values to distanceAf and clear distanceA for reuse
-            distanceAf = distanceA
-            del distanceA
-            distanceA = list()
-            distanceAf = np.delete(distanceAf,len(distanceAf)-1)
-            distanceAf = np.delete(distanceAf,len(distanceAf)-1)
-            # Convert to distance
-            print("RSSI = ")
-            print(distanceAf)
-            rssiRawA = distanceAf
-            distanceAf = distConv(distanceAf)
-            print("DistanceAf = ")
-            print(distanceAf)
-            #print("Length of DistanceAf is: ")
-            #print(len(distanceAf))
-            okA = 1
-
-            file = open(fileName, "a") #append timedata to the file
-            file.write(timeA+"\n") #write timeA to csv file. The 3 is the dataID.
-    
-    elif gatewayID == 'B':
-        
-        fileName="gatewayB.csv" #set to write to gatewayB.csv
-
-        if dataID == '1':
-            phoneB = data
-            print("\nPhone at Gateway B: 0" + phoneB)
-        if dataID == '2':
-            distanceB.append(float(data))
-        if dataID == '3':
-            if phoneB == phoneA:
-                
-                # 1) Set timeB == timeA
-                timeB = timeA
-                print("timeB: " + timeB)
-                
-                # 2) Put  distanceB values to distanceBf and clear distanceB for reuse
-                distanceBf = distanceB
-                del distanceB
-                distanceB = list()
-                distanceBf = np.delete(distanceBf,len(distanceBf)-1)
-                distanceBf = np.delete(distanceBf,len(distanceBf)-1)
-                # Convert to distance
-                print("RSSI = ")
-                print(distanceBf)
-                rssiRawB = distanceBf
-                distanceBf = distConv(distanceBf)
-                print("DistanceBf = ")
-                print(distanceBf)
-                #print("Length of DistanceBf is: ")
-                #print(len(distanceBf))
-                okB = 1
-
-                file = open(fileName, "a") #append timedata to the file
-                file.write(timeB+"\n") #write timeB to csv file. The 3 is the dataID.
-
-            else:
-                del distanceB
-                distanceB = list()
-                print("PhoneB is not the same as phoneA. Data will be discarded.")
-
-    elif gatewayID == 'C':
-
-        fileName="gatewayC.csv" #set to write to gatewayC.csv
-
-        if dataID == '1':
-            phoneC = data
-            print("\nPhone at Gateway C: 0" + phoneC)
-        if dataID == '2':
-            distanceC.append(float(data))
-        if dataID == '3':
-            if phoneC == phoneB == phoneA:
-                # 1) Set timeC == timeB
-                timeC = timeB
-                print("timeC: " + timeC)
-                # 2) Put  distanceB values to distanceBf and clear distanceB for reuse
-                distanceCf = distanceC
-                del distanceC
-                distanceC = list()
-                distanceCf = np.delete(distanceCf,len(distanceCf)-1)
-                distanceCf = np.delete(distanceCf,len(distanceCf)-1)
-                # Convert to distance
-                print("RSSI = ")
-                print(distanceCf)
-                rssiRawC = distanceCf
-                distanceCf = distConv(distanceCf)
-                print("DistanceCf = ")
-                print(distanceCf)
-                #print("Length of DistanceCf is: ")
-                #print(len(distanceCf))
-                okC = 1
-
-                file = open(fileName, "a") #append timedata to the file
-                file.write(timeC+"\n") #write timeB to csv file. The 3 is the dataID.
-
-            else:
-                del distanceC
-                distanceC = list()
-                print("PhoneC is not the same as phoneB and phoneA. Data will be discarded.")
-    
-    #Writing to CSV -- Dito nangyayari yung writing to .csv ng Cellphone number and Distance values. Sa taas yung timestamp.
-    file = open(fileName, "a") #append the data to the file
-    file.write(data) #write data to csv file
-
-    if okA == 1 & okB == 1 & okC == 1:
-        ok = 1
-        print("\nA, B, and C distances with the same phone number successfully obtained!\n")
-        file.close() #close out the file. Will only happen when not using infinite loop.
-#### TURN TO FUNCTION [1]
-
-
-if timeB != timeC:
-    print("Error. Time Mismatch.")
+# Function Declarations
+def listenForData(port,baud):
+    #Define variables for use
+    print("listening to port "+str(port)+" at "+str(baud))
+    arduino = serial.Serial(port, baud)
+    rssiA = list()
+    rssiB = list()
+    rssiC = list()
+    phoneA = 0
+    phoneB = 0
+    phoneC = 0
     okA = 0
     okB = 0
     okC = 0
     ok = 0
-    while 1:
-        i = 0 # wala lang toh pero nagkakaerror kung tinaggal
 
+    while ok == 0: #will wait until ok is 1. 'ok' will only be 1 when A B C are matching.
+        arduino_raw_data = arduino.readline() #read serial data
+        decoded_data = str(arduino_raw_data.decode("utf-8")) #convert to utf-8
+        data = decoded_data.replace('\n','') #remove \n in the decoded data
+        data = data.replace('\r','')
+        gatewayID = data[:1] #get gateway ID
+        dataID = data[1:2] #get data ID
+        data = data[2:] #get data
+        if gatewayID == 'A':
+            if dataID == '1':
+                phoneA = data
+                print("\nReceiving Gateway A: 0" + phoneA)
+            elif dataID == '2':
+                rssiA.append(float(data))
+            elif dataID == '3':
+                ts = time.localtime() #update time
+                timeA = time.strftime("%X", ts) #set timeA to current time
+                print("timeA: " + timeA)
+                dtn = str(dt.now())
+                dtn = dtn[0:19]
+                dtn = dtn.replace(':',';')
+                rssiA = np.delete(rssiA,len(rssiA)-1)
+                rssiA = np.delete(rssiA,len(rssiA)-1)
+                okA = 1
+        elif gatewayID == 'B':
+            if dataID == '1':
+                phoneB = data
+                print("\nReceiving Gateway B: 0" + phoneB)
+            elif dataID == '2':
+                rssiB.append(float(data))
+            elif dataID == '3':
+                ts = time.localtime() #update time
+                timeB = time.strftime("%X", ts) #set timeA to current time
+                print("timeB: " + timeB)
+                rssiB = np.delete(rssiB,len(rssiB)-1)
+                rssiB = np.delete(rssiB,len(rssiB)-1)
+                okB = 1
+        elif gatewayID == 'C':
+            if dataID == '1':
+                phoneC = data
+                print("\nReceiving Gateway C: 0" + phoneC)
+            if dataID == '2':
+                rssiC.append(float(data))
+            if dataID == '3':
+                ts = time.localtime() #update time
+                timeC = time.strftime("%X", ts) #set timeA to current time
+                print("timeC: " + timeC)
+                rssiC = np.delete(rssiC,len(rssiC)-1)
+                rssiC = np.delete(rssiC,len(rssiC)-1)
+                okC = 1
+        # Write to CSV, note if data matches
+        if phoneA == phoneB == phoneC and okA == 1 and okB == 1 and okC == 1:
+            with open(save_destination+'rawData.csv', mode='a') as logs:
+                logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
+                logswrite.writerow(['Phone','Time','Gateway A','Gateway B','Gateway C'])
+                for i in range(len(rssiA)):
+                    logswrite.writerow([phoneA,timeA,rssiA[i],rssiB[i],rssiC[i]])
+            start_dt = dt.strptime(timeA, '%H:%M:%S')
+            end_dt = dt.strptime(timeC, '%H:%M:%S')
+            diff = abs(end_dt - start_dt)
+            print("\nA, B, and C received successfully with interval of "+str(diff))
+            ok = 1
+        elif okA == 1 and okB == 1 and okC == 1:
+            print("\nError: Data mismatch, dumping date into error.csv")
+            with open(save_destination+'error.csv', mode='a') as logs:
+                logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
+                logswrite.writerow(['Time','Gateway A','Gateway B','Gateway C'])
+                for i in range(len(rssiA)):
+                    logswrite.writerow([phoneA,timeA,rssiA[i],rssiB[i],rssiC[i]])
+            rssiA = list()
+            rssiB = list()
+            rssiC = list()
+    return rssiA, rssiB, rssiC, dtn, phoneA #return the variables
 
-#Find a way to reload the script.
-# Run the trilateration algorithm here
-# Pwede mo i-add dito yung trilat code.
-# Use distanceAf, distanceBf, distanceCf.
+def importCSV():
+    distanceAf = list()
+    distanceBf = list()
+    distanceCf = list()
+    with open(save_destination+'gatewayAt.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        
+        for row in csv_reader:
+            if line_count == 0:
+                phoneA = row[1]
+            elif line_count > 0 and line_count < 59:
+                distanceAf.append(row[1])
+            elif line_count == 61:
+                dtn = row[1]
+                dtn = dtn.replace(':',';')
+            line_count += 1
+    with open(save_destination+'gatewayBt.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count > 0 and line_count < 59:
+                distanceBf.append(row[1])
+            line_count += 1
+    with open(save_destination+'gatewayCt.csv') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count > 0 and line_count < 59:
+                distanceCf.append(row[1])
+            line_count += 1
+    return distanceAf, distanceBf, distanceCf, dtn, phoneA
 
+def rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI):
+    distA = list()
+    distB = list()
+    distC = list()
+    rssi = [rssiA,rssiB,rssiC]
+    for i in range(len(rssi[0])):
+        distA.append(pow(10,((roRSSI-int(rssi[0][i]))/(10*n)))*dro)
+        distB.append(pow(10,((roRSSI-int(rssi[1][i]))/(10*n)))*dro)
+        distC.append(pow(10,((roRSSI-int(rssi[2][i]))/(10*n)))*dro)
+    return distA,distB,distC
+
+def rotateGraph(xg, yg, xAct, yAct):
+    def getBcoor(z):
+        x = z[0]
+        y = z[1]
+
+        F = np.empty((2))
+        F[0] = (x**2) + (y**2) - (Rab**2)
+        F[1] = ((x-xg[2])**2) + (y**2) - (Rbc**2)
+        return F
+    def getNcoor(z):
+        x = z[0]
+        y = z[1]
+
+        F = np.empty((2))
+        F[0] = (x**2) + (y**2) - (Ran**2)
+        F[1] = ((x-xg[2])**2) + (y**2) - (Rnc**2)
+        return F
+    zGuess = np.array([1,1])
+    if yg[2] != 0:
+        notFlat = 1
+        xg[2] = -np.sqrt((xg[2]**2)+(yg[2]**2))
+        yg[2] = 0
+        
+        z = fsolve(getBcoor,zGuess)
+        xg[1] = z[0]
+        yg[1] = -z[1]
+        z = fsolve(getNcoor,zGuess)
+        xAct = z[0]
+        yAct = z[1]
+    else:
+        notFlat = 0
+    return xg, yg, xAct, yAct, notFlat
+
+def trilaterate(distanceAf,distanceBf,distanceCf,xg,yg):
+    A = -2*xg[0]+2*xg[1]
+    B = -2*yg[0]+2*yg[1]
+    C = distanceAf**2-distanceBf**2-xg[0]**2+xg[1]**2-yg[0]**2+yg[1]**2
+    D = -2*xg[1]+2*xg[2]
+    E = -2*yg[1]+2*yg[2]
+    F = distanceBf**2-distanceCf**2-xg[1]**2+xg[2]**2-yg[1]**2+yg[2]**2
+    x = (C*E-F*B)/(E*A-B*D)
+    y = (C*D-A*F)/(B*D-A*E)
+    return x,y
+
+# Coordinate Filter
+def tolFilter(x,y,errorTolerance):
+    i = 0
+    while i != 60:
+        if i == len(y):
+            i = 60
+            continue
+        e = 0
+        dist = np.sqrt(((xAve-x[i])**2)+((yAve-y[i])**2))
+        if dist >= errorTolerance:
+            #print(str(i)+" - Deleted"+' '+str(x[i])+' '+str(y[i]))
+            x = np.delete(x,i)
+            y = np.delete(y,i)
+        else:
+            #print(str(i)+' '+str(x[i])+' '+str(y[i]))
+            i += 1
+    return x,y
+
+def kmeansOptimize(data):
+    # Compute for inertias for every possible number of clusters
+    inertia = [] #aka Sum of Squared Distance Errors
+    for i in range(1,len(data)):
+        kmeans = KMeans(n_clusters=i).fit(data)
+        inertia.append(kmeans.inertia_)
+
+    #Determine optimal Number of Clusters based on Elbow
+    elbow = KneeLocator(range(1,len(data)),inertia, curve='convex', direction='decreasing')
+
+    #Perform K-means with elbow no. of clusters
+    kmeans = KMeans(n_clusters=elbow.knee, n_init=5).fit(data)
+
+    return kmeans,inertia,elbow
+
+def haversine(lat1, lon1, lat2, lon2):
+
+    miles = 3959.87433
+    meters = 6372.8*1000
+
+    R = meters
+
+    dLat = radians(lat2 - lat1)
+    dLon = radians(lon2 - lon1)
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+
+    a = sin(dLat/2)**2 + cos(lat1)*cos(lat2)*sin(dLon/2)**2
+    c = 2*asin(sqrt(a))
+
+    distance = R * c
+
+    return distance
+
+def GPSToCart(lat,lon):
+    # Convert GPS Coordinates to Cartesian Coordinates
+    # For manual checking, refer to https://epsg.io/transform#s_srs=4326&t_srs=25391 
+    # Defining CRS aka Coordinate Reference Systems
+    inCRS = CRS.from_epsg(4326) #CRS of GPS that uses Latitude and Longitude Values
+    outCRS = CRS.from_epsg(25391) #Luzon Datum of 1911 utilizing Transverse Mercator Project Map
+
+    #Conversion from GPS Coordinates to Philippine Cartesian Coordinates
+    GeoToCart = Transformer.from_crs(inCRS,outCRS)
+    x,y = GeoToCart.transform(lat,lon) #Format should be (lat,lon) for epsg:4326
+
+    
+    return x,y
+
+def cartToGPS(x,y):
+    # Convert Cartesian Coordinates back to GPS Coordinates
+    # For manual checking, refer to https://epsg.io/transform#s_srs=25391&t_srs=4326 
+    # Defining CRS aka Coordinate Reference Systems
+    inCRS = CRS.from_epsg(4326) #CRS of GPS that uses Latitude and Longitude Values
+    outCRS = CRS.from_epsg(25391) #Luzon Datum of 1911 utilizing Transverse Mercator Project Map
+
+    #Conversion from Philippine Cartesian back to GPS Coordinates Coordinates
+    CartToGeo = Transformer.from_crs(outCRS,inCRS)
+    lat, lon = CartToGeo.transform(x,y) #Format should be (x,y) for epsg:25391
+
+    return lat, lon
+
+def errorcomp(x, y, xAct, yAct, xg, yg, kmeans, xAve, yAve, data):
+
+    compVact = list()
+    for i in range(len(x)):
+        compVact.append(np.sqrt((x[i]-xAct)**2+(y[i]-yAct)**2))
+
+    #Computed distanceAf, Bf, Cf
+    comp_distanceAf = list()
+    comp_distanceBf = list()
+    comp_distanceCf = list()
+    comp_distanceAf = np.sqrt(((xAct-xg[0])**2)+((yAct-yg[0])**2))
+    comp_distanceBf = np.sqrt(((xAct-xg[1])**2)+((yAct-yg[1])**2))
+    comp_distanceCf = np.sqrt(((xAct-xg[2])**2)+((yAct-yg[2])**2))
+
+    #K-means centroid vs. Average Point (dataset average)
+    centVave = np.sqrt((kmeans.cluster_centers_[:,0]-xAve)**2+(kmeans.cluster_centers_[:,1]-yAve)**2)
+
+    #Computed Position vs. K-means centroid
+    compVcent = np.sqrt([(data[:,0]-kmeans.cluster_centers_[0,0])**2+(data[:,1]-kmeans.cluster_centers_[0,1])**2])
+    for i in range(1,len(kmeans.cluster_centers_)):
+        distance = np.sqrt([(data[:,0]-kmeans.cluster_centers_[i,0])**2+(data[:,1]-kmeans.cluster_centers_[i,1])**2])
+        compVcent = np.append(compVcent,distance,axis=0)
+
+    return compVact, comp_distanceAf, comp_distanceBf, comp_distanceCf, centVave, compVcent
+
+# Listen to COM port and check for errors
+rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
+# For testing import CSVs from gatewayAt etc. *note: all of the imported data are in distances already
+# distanceAf, distanceBf, distanceCf, dtn, phoneA = importCSV()
+
+#Convert RSSI to Distance
+# comment if using imported data
+distanceAf, distanceBf, distanceCf = rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI)
+
+#Convert GPS Coordinates to Cartesian Coordinates
+xg,yg = GPSToCart(latg,longg)
+xAct,yAct = GPSToCart(latAct,longAct)
+
+# Trilateration Part of the Code
 for i in range(len(distanceAf)):
     distanceAf[i] = float(distanceAf[i])
     distanceBf[i] = float(distanceBf[i])
     distanceCf[i] = float(distanceCf[i])
-
-print("The program is now trilaterating...\n")
-
-# YaniCode Starts Here
-###############TRILATERATION#############
 # Convert Distances from each GNode to numpy arrays
 distanceAf = np.array(distanceAf)
 distanceBf = np.array(distanceBf)
 distanceCf = np.array(distanceCf)
-
-# GNode Coordinates
-# Format: A B C
-xg = np.array([0,9.0,-34.0])
-yg = np.array([0,196.0,-79.0])
-
-# Actual Node Position
-xAct = -24        #Target x-coordinate
-yAct = 0          #Target y-coordinat
-
-# CHECK MO GREG KUNG ANO GINAWA MO
-# def getBcoor(z):
-#     x = z[0]
-#     y = z[1]
-
-#     F = np.empty((2))
-#     F[0] = (x**2) + (y**2) - (Rab**2)
-#     F[1] = ((x-xg[2])**2) + (y**2) - (Rbc**2)
-#     return F
-# def getNcoor(z):
-#     x = z[0]
-#     y = z[1]
-
-#     F = np.empty((2))
-#     F[0] = (x**2) + (y**2) - (Ran**2)
-#     F[1] = ((x-xg[2])**2) + (y**2) - (Rnc**2)
-#     return F
-# zGuess = np.array([1,1])
-# if yg[2] == 0:
-#     notFlat = 1
-#     xg[2] = -np.sqrt((xg[2]**2)+(yg[2]**2))
-#     yg[2] = 0
-    
-#     z = fsolve(getBcoor,zGuess)
-#     xg[1] = z[0]
-#     yg[1] = -z[1]
-#     z = fsolve(getNcoor,zGuess)
-#     xAct = z[0]
-#     yAct = z[1]
-# else:
-#     notFlat = 0
-
-# Trilateration Calculations
-zGuess = np.array([1,1,1])
-
-x = list()
-y = list()
-
+# Get average distances
 AfAve = sum(distanceAf)/len(distanceAf)
 BfAve = sum(distanceBf)/len(distanceBf)
 CfAve = sum(distanceCf)/len(distanceCf)
+# Rotate Graph, comment if not needed
+# xg, yg, xAct, yAct, notFlat = rotateGraph(xg, yg, xAct, yAct)
 
-## THIS IS A FILTER ///////////////////
-# Adds way to remove outliers in the distances
-# FUNCTION [2]
-errorTolerance = 50
-i = 0
-while i < 60:
-    e = 0
-    if distanceAf[i] > AfAve + errorTolerance or distanceAf[i] < AfAve - errorTolerance:
-        e = 1
-    if distanceBf[i] > BfAve + errorTolerance or distanceBf[i] < BfAve - errorTolerance:
-        e = 1
-    if distanceCf[i] > CfAve + errorTolerance or distanceCf[i] < CfAve - errorTolerance:
-        e = 1
-    if e != 0:
-        distanceAf = np.delete(distanceAf,i)
-        distanceBf = np.delete(distanceBf,i)
-        distanceCf = np.delete(distanceCf,i)
-        if i == len(distanceAf)-1:
-            i = 60
-            continue
-    dA = distanceAf[i]
-    dB = distanceBf[i]
-    dC = distanceCf[i]
-    z = fsolve(trilatEqn,zGuess)
-    x.append(z[0])
-    y.append(z[1])
-    i += 1
-    if i == len(distanceAf)-1:
-        i = 60
-# FUNCTION [2]
+# Trilaterate Data
+print("Trilaterating Data...\n")
+x,y = trilaterate(distanceAf,distanceBf,distanceCf,xg,yg)
+xAve,yAve = trilaterate(AfAve,BfAve,CfAve,xg,yg)
 
-# Compute for the average distances based on the received data
-AfAve = sum(distanceAf)/len(distanceAf)
-BfAve = sum(distanceBf)/len(distanceBf)
-CfAve = sum(distanceCf)/len(distanceCf)
+# Tolerance Filter
+xFilt,yFilt = tolFilter(x,y,errorTolerance)
+# Mean Coordinates after Tolerance Filter
+xFiltAve = np.mean(xFilt)
+yFiltAve = np.mean(yFilt)
 
-# Plot the data for trilateration w/o the filters
-plt.figure(1)
-plt.scatter(x, y, label='Phone Node Locations', cmap='brg', s=20)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
-plt.title(dtn + ' 0' + phoneA[0:len(phoneA)-1]  + ' Trilateration')
-plt.xlabel('x-axis')
-plt.ylabel('y-axis')
+# Plot the data frequency of the gateways
+fig = 1
+plt.figure(fig)
+distSeriesA = pd.Series(distanceAf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
+distSeriesA.columns = ['Distance','Frequency']
+distSeriesA['Distance'] = distSeriesA.round({'Distance':1})
+distSeriesB = pd.Series(distanceBf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
+distSeriesB.columns = ['Distance','Frequency']
+distSeriesB['Distance'] = distSeriesB.round({'Distance':1})
+distSeriesC = pd.Series(distanceCf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
+distSeriesC.columns = ['Distance','Frequency']
+distSeriesC['Distance'] = distSeriesC.round({'Distance':1})
+figur, axes = plt.subplots(1,3, figsize=(18, 5))
+axes[0].set_title(dtn + ' 0' + phoneA  + ' A FD')
+plots = sns.barplot(ax=axes[0],x="Distance", y="Frequency", data=distSeriesA)
+for bar in plots.patches:
+    plots.annotate(format(bar.get_height(), '.1f'), 
+                    (bar.get_x() + bar.get_width() / 2, 
+                    bar.get_height()), ha='center', va='center',
+                    size=9, xytext=(0, 8),
+                    textcoords='offset points')
+
+axes[1].set_title(dtn + ' 0' + phoneA  + ' B FD')
+plots = sns.barplot(ax=axes[1],x="Distance", y="Frequency", data=distSeriesB)
+for bar in plots.patches:
+    plots.annotate(format(bar.get_height(), '.1f'), 
+                    (bar.get_x() + bar.get_width() / 2, 
+                    bar.get_height()), ha='center', va='center',
+                    size=9, xytext=(0, 8),
+                    textcoords='offset points')
+
+axes[2].set_title(dtn + ' 0' + phoneA  + ' C FD')
+plots = sns.barplot(ax=axes[2],x="Distance", y="Frequency", data=distSeriesC)
+for bar in plots.patches:
+    plots.annotate(format(bar.get_height(), '.1f'), 
+                    (bar.get_x() + bar.get_width() / 2, 
+                    bar.get_height()), ha='center', va='center',
+                    size=9, xytext=(0, 8),
+                    textcoords='offset points')
+
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
+fig += 1
+
+# Plot the behavior of the distance
+plt.figure(fig)
+plt.plot(distanceAf, label='Gateway A Distances')
+plt.plot(distanceBf, label='Gateway B Distances')
+plt.plot(distanceCf, label='Gateway C Distances')
+plt.title(dtn + ' 0' + phoneA  + ' Distance Behavior')
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
 plt.legend()
-# CHANGE
-plt.savefig(save_destination + dtn 
-            + ' 0' + phoneA[0:len(phoneA)-1] + ' Trilateration.jpg') #Change Directory Accordingly
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg')
+fig += 1
+# Plot the data for trilateration w/o the filters
+plt.figure(fig)
+plt.scatter(x, y, label='Phone Node Locations', cmap='brg', s=20)
+plt.scatter(xAve, yAve, label='Ave Node Locations', cmap='brg', s=20)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
+plt.title(dtn + ' 0' + phoneA  + ' RawTrilateration')
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
+plt.legend()
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg')
+fig += 1
+# Plot the data for trilateration w/ the filters
+plt.figure(fig)
+plt.scatter(xFilt, yFilt, label='Phone Node Locations', cmap='brg', s=20)
+plt.scatter(xFiltAve, yFiltAve, label='Ave Node Locations', cmap='brg', s=20)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
+plt.title(dtn + ' 0' + phoneA  + ' FiltTrilateration')
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
+plt.legend()
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg')
+fig += 1
 
-###############K-Means Clustering#############
-#K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
-if len(x)<2:
+# K-means
+# K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
+if len(xFilt)<2:
     quit()
 
-unformattedX = x
-unformattedY = y
-xAve = np.mean(x)
-yAve = np.mean(y)
+# Create numpy array 'data' containing (x,y) coordinates
+data = np.array([[xFilt[0],yFilt[0]]])
+for i in range(1,len(xFilt)):
+    data = np.append(data,[[xFilt[i],yFilt[i]]], axis=0)
 
-## THIS IS A FILTER ///////////////////
-# Adds way to remove outliers in the coordinates
-# FUNCTION [3]
-i = 0
-while i != 60:
-    if i == len(y):
-        i = 60
-        continue
-    e = 0
-    dist = np.sqrt(((xAve-x[i])**2)+((yAve-y[i])**2))
-    if dist >= errorTolerance:
-        #print(str(i)+" - Deleted"+' '+str(x[i])+' '+str(y[i]))
-        x = np.delete(x,i)
-        y = np.delete(y,i)
-    else:
-        #print(str(i)+' '+str(x[i])+' '+str(y[i]))
-        i += 1
-# FUNCTION [3]
-
-#Create numpy array containing (x,y) coordinates
-data=np.array([[x[0],y[0]]])
-for i in range(1,len(x)):
-    data=np.append(data,[[x[i],y[i]]], axis=0)
+# Duplicate Phone Coordinate Filter for K-means Convergence
 data = np.unique(data, axis=0) #Eliminate Duplicates in data
-xAve = np.mean(data[:,0])
-yAve = np.mean(data[:,1])
-inertia = [] #aka Sum of Squared Distance Errors
 
-#Compute for inertias for every possible number of clusters
-# FUNCTION [4]
-for i in range(1,len(data)):
-    kmeans = KMeans(n_clusters=i).fit(data)
-    inertia.append(kmeans.inertia_)
-
-#Determine optimal Number of Clusters based on Elbow
-elbow = KneeLocator(range(1,len(data)),inertia, curve='convex', direction='decreasing')
-
+kmeans,inertia,elbow = kmeansOptimize(data)
 print('Optimal Number of Clusters is', elbow.knee)
-kmeans = KMeans(n_clusters=elbow.knee, n_init=5).fit(data) #Perform K-means with elbow no. of clusters
-# FUNCTION [4 = kmeans,intertia,elbow.knee]
 
 #Elbow Plot
-plt.figure(2)
+plt.figure(fig)
 plt.plot(range(1,len(data)), inertia)
 plt.xlabel('No. of Clusters')
 plt.ylabel('Sum of Squared Distances')
 plt.title(dtn + ' 0' + phoneA[0:len(phoneA)-1]  + ' Elbow Graph')
-# CHANGE
-plt.savefig(save_destination + dtn 
-            + ' 0' + phoneA[0:len(phoneA)-1] + ' Elbow.jpg') #Change Directory Accordingly
+plt.savefig(save_destination + dtn + ' 0' + phoneA[0:len(phoneA)-1] + ' Elbow.jpg') #Change Directory Accordingly
+fig += 1
 
-#K-Means Plot
-plt.figure(3)
+# K-means Plot
+plt.figure(fig)
 plt.scatter(data[:,0],data[:,1], c=kmeans.labels_, label = 'Phone Node Locations', cmap='brg', s=5)
-plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), 
-            marker = 'x', label = 'Cluster Centers', cmap='brg', s=30)
+plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker = 'x', label = 'Cluster Centers', cmap='brg', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='green', s=30)
@@ -414,69 +523,89 @@ plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
-plt.xlabel('x-axis')
-plt.ylabel('y-axis')
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
 plt.title(dtn + ' 0' + phoneA[0:len(phoneA)-1]  + ' K-Means')
 plt.legend()
-plt.savefig(save_destination + dtn 
-            + ' 0' + phoneA[0:len(phoneA)-1] + ' K-Means.jpg') #Change Directory Accordingly
+plt.savefig(save_destination + dtn + ' 0' + phoneA[0:len(phoneA)-1] + ' K-Means.jpg') #Change Directory Accordingly
+fig += 1
 
-###############Error Computations############
-#Computed Position vs. Actual Position
-# FUNCTION [5]
-compVact = list()
-for i in range(len(x)):
-    compVact.append(np.sqrt((x[i]-xAct)**2+(y[i]-yAct)**2))
-
-#Computed distanceAf, Bf, Cf
-comp_distanceAf = list()
-comp_distanceBf = list()
-comp_distanceCf = list()
-
-comp_distanceAf = np.sqrt((xAct**2)+(yAct**2))
-comp_distanceBf = np.sqrt(((xAct-xg[1])**2)+((yAct-yg[1])**2))
-comp_distanceCf = np.sqrt(((xAct-xg[2])**2)+((yAct-yg[2])**2))
-
-
-#K-means centroid vs. Average Point (dataset average)
-centVave = np.sqrt((kmeans.cluster_centers_[:,0]-xAve)**2+(kmeans.cluster_centers_[:,1]-yAve)**2)
-
-#Computed Position vs. K-means centroid
-compVcent = np.sqrt([(data[:,0]-kmeans.cluster_centers_[0,0])**2+(data[:,1]-kmeans.cluster_centers_[0,1])**2])
-for i in range(1,len(kmeans.cluster_centers_)):
-    distance = np.sqrt([(data[:,0]-kmeans.cluster_centers_[i,0])**2+(data[:,1]-kmeans.cluster_centers_[i,1])**2])
-    compVcent = np.append(compVcent,distance,axis=0)
-# FUNCTION [5]
+# Error Computations
+# Computed Position vs. Actual Position
+compVact, comp_distanceAf, comp_distanceBf, comp_distanceCf, centVave, compVcent = errorcomp(x, y, xAct, yAct, xg, yg, kmeans, xAve, yAve, data)
 
 ###############CSV Writing############
-with open(save_destination+'Recompute.csv', mode='a') as logs:
-    logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
-    logswrite.writerow(['Actual Position','',xAct,yAct])
-    logswrite.writerow(['gnodeA','gnodeB','gnodeC'])
-    logswrite.writerows([[np.append(xg[0],yg[0]), np.append(xg[1],yg[1]), np.append(xg[2],yg[2])]])
-    logswrite.writerow(['Computed Distances from Gnodes'])
-    logswrite.writerow(['A','B','C'])
-    logswrite.writerow([comp_distanceAf,comp_distanceBf,comp_distanceCf])
-    logswrite.writerow(['Average Points'])
-    logswrite.writerow(['A','B','C','','Xave','Yave'])
-    logswrite.writerow([AfAve,BfAve,CfAve,'',xAve,yAve])
-    logswrite.writerow(['K-Means Centroids vs. Average Point'])
-    logswrite.writerows([centVave])
-    logswrite.writerow(['Optimal # of Clusters','','',elbow.knee])
-    logswrite.writerow(['Time','Phone#','Ra','Rb','Rc','','Xcomp','Ycomp','I','MSE'])
-    for i in range(len(unformattedX)):
-        if i < len(inertia):
-            logswrite.writerow([dtn,'0'+phoneA[0:len(phoneA)-1],distanceAf[i],distanceBf[i],distanceCf[i],'',x[i],y[i],inertia[i],compVact[i]])
-        elif i >= len(inertia) and i <len(compVact):
-            logswrite.writerow([dtn,'0'+phoneA[0:len(phoneA)-1],distanceAf[i],distanceBf[i],distanceCf[i],'',x[i],y[i],'',compVact[i]])
-        else: 
-            logswrite.writerow([dtn,'0'+phoneA[0:len(phoneA)-1],distanceAf[i],distanceBf[i],distanceCf[i]])
+with open(save_destination+'Basic.csv', mode='a') as blogs:
+    blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
+    blogswrite.writerow(['Time',dtn])
+    blogswrite.writerow(['Phone#','0'+phoneA[0:len(phoneA)-1]])
+    blogswrite.writerow(['gnodeA',np.append(xg[0],yg[0])])
+    blogswrite.writerow(['gnodeB',np.append(xg[1],yg[1])])
+    blogswrite.writerow(['gnodeC',np.append(xg[2],yg[2])])
+    blogswrite.writerow(['Mean Raw Distances'])
+    blogswrite.writerow(['A','B','C'])
+    blogswrite.writerow([AfAve,BfAve,CfAve])
+    blogswrite.writerow(['Mean Raw X and Y Coordinates','','','',np.append(xAve,yAve)])
+    blogswrite.writerow(['Mean Coordinates with Tolerance Filter','','','',np.append(xFiltAve,yFiltAve)])
+    blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
+    blogswrite.writerow([''])
+    blogswrite.writerow([''])
+    
+with open(save_destination+'Actual.csv', mode='a') as alogs:
+    alogswrite = csv.writer(alogs, dialect='excel', lineterminator='\n')
+    alogswrite.writerow(['Time',dtn])
+    alogswrite.writerow(['Phone#','0'+phoneA[0:len(phoneA)-1]])
+    alogswrite.writerow(['Actual Coordinates','',np.append(xAct,yAct)])
+    alogswrite.writerow(['Actual Computed Distances from Gnodes'])
+    alogswrite.writerow(['A','','B','','C'])
+    alogswrite.writerow([comp_distanceAf,'',comp_distanceBf,'',comp_distanceCf])
+    alogswrite.writerow(['Actual Position vs. Raw X and Y Coordinates'])
+    for i in range(np.shape(compVact)[0]):
+        alogswrite.writerow([compVact[i]])
+    alogswrite.writerow([''])
+    alogswrite.writerow([''])
 
-    logswrite.writerow(['Computed Position vs. K-means Centroid:'])
-    rangeof_compVcent = compVcent[:,1]
-    for i in range(len(rangeof_compVcent)):
-        logswrite.writerows([compVcent[i,:]])
-    logswrite.writerow([''])
-    logswrite.writerow([''])
-
-#YaniCode ends here
+with open(save_destination+'Coordinates.csv', mode='a') as clogs:
+    clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
+    clogswrite.writerow(['Time',dtn])
+    clogswrite.writerow(['Phone#','0'+phoneA[0:len(phoneA)-1]])
+    clogswrite.writerow(['Raw X and Y Coordinates'])
+    for i in range(np.shape(x)[0]):
+        clogswrite.writerow([np.append(x[i],y[i])])
+    clogswrite.writerow(['-------------------------------'])
+    clogswrite.writerow(['Coordinates with Tolerance Filter'])
+    for i in range(np.shape(xFilt)[0]):
+        clogswrite.writerow([np.append(xFilt[i],yFilt[i])])
+    clogswrite.writerow([''])
+    clogswrite.writerow([''])
+    
+with open(save_destination+'Distances.csv', mode='a') as dlogs:
+    dlogswrite = csv.writer(dlogs, dialect='excel', lineterminator='\n')
+    dlogswrite.writerow(['Time',dtn])
+    dlogswrite.writerow(['Phone#','0'+phoneA[0:len(phoneA)-1]])
+    dlogswrite.writerow(['Raw Distances'])
+    dlogswrite.writerow(['A','B','C'])
+    for i in range(len(distanceAf)):
+        dlogswrite.writerow([distanceAf[i],distanceBf[i],distanceCf[i]])    
+    dlogswrite.writerow([''])
+    dlogswrite.writerow([''])
+    
+    with open(save_destination+'K-Means.csv', mode='a') as klogs:
+        klogswrite = csv.writer(klogs, dialect='excel', lineterminator='\n')
+        klogswrite.writerow(['Time',dtn])
+        klogswrite.writerow(['Phone#','0'+phoneA[0:len(phoneA)-1]])
+        klogswrite.writerow(['Inertia'])
+        for i in range(len(inertia)):
+            klogswrite.writerow([inertia[i]]) 
+        klogswrite.writerow(['K-Means Centroid Coordinates'])
+        for i in range(elbow.knee):
+            klogswrite.writerows([[np.append(kmeans.cluster_centers_[i,0],kmeans.cluster_centers_[i,1])]]) 
+        klogswrite.writerow(['K-Means Centroids vs. Mean Coordinates with Tolerance Filter'])
+        klogswrite.writerows([centVave])
+        klogswrite.writerow(['K-Means Centroids vs. Coordinates w/ Tolerance Filter '])
+        for i in range(len(compVcent)):    
+            for j in range (len(compVcent[i])):
+                klogswrite.writerow([compVcent[i][j]])
+            klogswrite.writerow(['-------------------------------'])
+        klogswrite.writerow([''])
+        klogswrite.writerow([''])

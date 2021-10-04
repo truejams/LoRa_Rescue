@@ -73,6 +73,12 @@ Revised build v0.4.8 [Ianny]
     - Added and used a Firebase Web App called 'LoRa Rescue Storage' for this
 - Used the os library to change the working directory for Pyrebase
 
+Revised build v0.4.9 [Ianny]
+- The browser_driver now points to chromedriver.exe directly
+- If ever, manually download the latest stable version of chromedriver 
+    - New Download Link: https://sites.google.com/chromium.org/driver/
+    - Old link will be deprecated soon
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary
@@ -83,5 +89,3 @@ Build v0.1
 - This code has been tested indoors with LOS environment
 - The mobile node was placed 2.5 meters away
 - The result showed an optimal path loss exponent of 9.9
-
-

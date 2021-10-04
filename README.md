@@ -89,3 +89,6 @@ Build v0.1
 - This code has been tested indoors with LOS environment
 - The mobile node was placed 2.5 meters away
 - The result showed an optimal path loss exponent of 9.9
+
+Build v0.2
+- Incorporated haversine formula for calibration

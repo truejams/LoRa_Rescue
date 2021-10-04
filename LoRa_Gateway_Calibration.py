@@ -1,8 +1,12 @@
 # LoRa Rescue Calibration Code
-# build v0.1
+
+# Build v0.1
 # This code has been tested indoors with LOS environment
 # The mobile node was placed 2.5 meters away
 # The result showed an optimal path loss exponent of 9.9
+
+# Build v0.2
+# Incorporated haversine formula for calibration
 
 # To use the code no editing of the arduino code will be necessary
 # Simply plug the gateway and transmit data from the mobile node
@@ -23,7 +27,7 @@ from datetime import datetime as dt
 import csv
 
 # Variable declarations
-port = 'com19'
+port = 'com9'
 baud = 115200
 
 ts = time.localtime() #update time
@@ -34,7 +38,7 @@ dist = list()
 diff = list()
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-save_destination = "C:\\Users\\grego\\LoRa Rescue Data 2\\0.3test\\"
+save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\7-10-21_TestingData\\"
 
 # Distance calculation constants
 # Change based on desired coefficient
@@ -48,18 +52,21 @@ roRSSI = -32
 tdist = 0.0
 
 #Trilateration calculation constants
-# GNode Coordinate
+# Gateway Node Coordinate (Cartesian; don't touch) ############ DO NOT TOUCH
 xg = 0
 yg = 0
-# GNode Position
-longg = 0
-latg = 0
-# Actual Node Coordinates
+
+# Gateway Node Position (GPS coordinates decimal)
+longg = 14.6651141
+latg = 120.9720032
+
+# Actual Node Coordinates (Cartesian; dist. in meters) ############ DO NOT TOUCH
 xAct = 0            #Target x-coordinate
-yAct = 2.5            #Target y-coordinat
-# Actual Node Position
-longAct = 0
-latAct = 0
+yAct = 2.5          #Target y-coordinate
+
+# Actual Mobile node Node Position (GPS Coordinates Decimal)
+longAct = 14.6685564
+latAct = 120.9679808
 
 # Function Declarations
 def listenForData(port,baud):
@@ -109,6 +116,27 @@ def rssiToDist(rssi,n,dro,roRSSI):
  
 # Start calibration
 actDist = sqrt(((xg-xAct)**2)+((yg-yAct)**2))
+def haversine(lat1, lon1, lat2, lon2):
+
+    miles = 3959.87433
+    meters = 6372.8*1000
+
+    R = meters
+
+    dLat = radians(lat2 - lat1)
+    dLon = radians(lon2 - lon1)
+    lat1 = radians(lat1)
+    lat2 = radians(lat2)
+
+    a = sin(dLat/2)**2 + cos(lat1)*cos(lat2)*sin(dLon/2)**2
+    c = 2*asin(sqrt(a))
+
+    distance = R * c
+
+    return distance
+
+actDist = haversine(latg,longg,latAct,longAct)
+
 print("\nMobile Node is "+ str(actDist) +" meters away gateway A")
 rssi, phone = listenForData(port,baud)
 averssi = sum(rssi)/len(rssi)

@@ -78,6 +78,7 @@ Revised build v0.4.9 [Ianny]
 - If ever, manually download the latest stable version of chromedriver 
     - New Download Link: https://sites.google.com/chromium.org/driver/
     - Old link will be deprecated soon
+- Added a function for DBSCAN called dbscan()
 
 # LoRa_Gateway_Calibration Build Logs
 Use information

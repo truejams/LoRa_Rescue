@@ -92,8 +92,12 @@
 # If ever, manually download the latest stable version of chromedriver 
     # New Download Link: https://sites.google.com/chromium.org/driver/
     # Old link will be deprecated soon
+# Added a function for DBSCAN called dbscan()
 
-
+# Revised build v0.5.0
+# Changelog:
+# Added database
+# Added DBscan
 
 # Import Code
 from sklearn.cluster import KMeans
@@ -113,8 +117,7 @@ import serial
 from datetime import datetime as dt
 import os
 import pyrebase
-
-
+from sklearn.cluster import DBSCAN
 
 #Variable Declaration
 distanceA = list()
@@ -125,7 +128,6 @@ phoneA = 0
 ###### CHANGE THIS FOR YOUR DIRECTORY
 save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 browser_driver = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\chromedriver.exe"
-
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -162,8 +164,6 @@ longAct = np.array([121.074731])
 latAct = np.array([14.686970])
 # For filtering
 errorTolerance = 50
-
-
 
 # Function Declarations
 def listenForData(port,baud):
@@ -253,6 +253,13 @@ def listenForData(port,baud):
             rssiA = list()
             rssiB = list()
             rssiC = list()
+    firebase = pyrebase.initialize_app(LoraRescueStorage)
+    db = firebase.database()
+    dataRSSI = {"RSSI Gateway A":list(rssiA),
+        "RSSI Gateway B":list(rssiB),
+        "RSSI Gateway C":list(rssiC)}
+    dtemp = dtn
+    db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
     return rssiA, rssiB, rssiC, dtn, phoneA #return the variables
 
 def importCSV(save_destination, startrow, endrow):
@@ -441,19 +448,39 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Upload files to Firebase Storage
     storage.child(cloudDir).put(localDir)
 
+def dbscan(epsilon, clusterSamples, data, fig):
+    db = DBSCAN(eps=epsilon, min_samples=clusterSamples).fit(data)
+    dbData = data[db.labels_>-1] 
+    dbLabels = db.labels_[db.labels_>-1]
+    dbGraph = plt.figure(fig)
+    plt.scatter(dbData[:,0],dbData[:,1], c=dbLabels, label = 'Mobile Node Clusters', cmap='brg', s=5)
+    plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+    plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
+    plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='green', s=30)
+    plt.grid(linewidth=1, color="w")
+    ax = plt.gca()
+    ax.set_facecolor('gainsboro')
+    ax.set_axisbelow(True)
+    plt.xlabel('x-axis [Meters]')
+    plt.ylabel('y-axis [Meters]')
+    plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
+    plt.legend()
+    plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg') #Change Directory Accordingly
+    fig += 1
 
+    return fig, dbGraph
 
+##################################################################################################################
 # Listen to COM port and check for errors
 # rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
 
 # Manually retrieve data from rawData.csv
 # Select the start and end rows of DATA to be read
-startrow = 60
-endrow = 118
+startrow = 591
+endrow = 649
 # Import RSSI data, phone number, and timestamp
 rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
-
-
+##################################################################################################################
 
 #Convert RSSI to Distance
 distanceAf, distanceBf, distanceCf = rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI)
@@ -461,8 +488,6 @@ distanceAf, distanceBf, distanceCf = rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI)
 #Convert GPS Coordinates to Cartesian Coordinates
 xg,yg = GPSToCart(latg,longg)
 xAct,yAct = GPSToCart(latAct,longAct)
-
-
 
 # Trilateration Part of the Code
 for i in range(len(distanceAf)):
@@ -492,11 +517,8 @@ xFiltAve = np.mean(xFilt)
 yFiltAve = np.mean(yFilt)
 
 
-
 #Compute actual distance of phone node to GNodes
 comp_distanceAf, comp_distanceBf, comp_distanceCf = actualDist(xAct, yAct, xg, yg)
-
-
 
 # Plot the data frequency of the gateways
 fig = 1
@@ -541,12 +563,8 @@ for bar in plots.patches:
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
 fig += 1
 
-
-
 #For the .py file exclusively, the DB graph unexpectedly mixes with the FD graph without plt.close()
 plt.close() 
-
-
 
 # Plot the behavior of the distance
 plt.figure(fig)
@@ -585,8 +603,6 @@ plt.legend()
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg')
 fig += 1
 
-
-
 # K-means
 # K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
 if len(xFilt)<2:
@@ -603,8 +619,6 @@ data = np.unique(data, axis=0) #Eliminate Duplicates in data
 kmeans,inertia,elbow = kmeansOptimize(data)
 print('Optimal Number of Clusters is', elbow.knee)
 
-
-
 #Elbow Plot
 plt.figure(fig)
 plt.plot(range(1,len(data)), inertia)
@@ -616,7 +630,7 @@ fig += 1
 
 # K-means Plot
 plt.figure(fig)
-plt.scatter(data[:,0],data[:,1], c=kmeans.labels_, label = 'Phone Node Locations', cmap='brg', s=5)
+plt.scatter(data[:,0],data[:,1], c=kmeans.labels_, label = 'Mobile Node Locations', cmap='brg', s=5)
 plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker = 'x', label = 'Cluster Centers', cmap='brg', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
@@ -631,8 +645,6 @@ plt.title(dtn + ' 0' + phoneA  + ' K-Means', y=1.05)
 plt.legend()
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-Means.jpg') #Change Directory Accordingly
 fig += 1
-
-
 
 # K-means Plot Folium Mapping
 # Cartesian to GPS Coordinate Conversion
@@ -705,13 +717,14 @@ time.sleep(5) # Delay to accomodate browser snapshotting, change accordingly
 driver.save_screenshot(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.jpg')
 driver.close()
 
-
+# DBSCAN
+epsilon = 50
+clusterSamples = 3
+fig, dbGraph = dbscan(epsilon, clusterSamples, data, fig)
 
 # Error Computations
 # Computed Position vs. Actual Position
 compVact, centVave, compVcent = errorcomp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
-
-
 
 ###############CSV Writing############
 with open(save_destination+'Basic.csv', mode='a') as blogs:
@@ -789,7 +802,45 @@ with open(save_destination+'Distances.csv', mode='a') as dlogs:
         klogswrite.writerow([''])
         klogswrite.writerow([''])
 
+firebase = pyrebase.initialize_app(LoraRescueStorage)
+db = firebase.database()
+dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
+        "GNode B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
+        "GNode C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
+        "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
+        "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
+        "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
+        "Optimal Number of Clusters":int(elbow.knee)}
+dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
+        "Actual Computed Distances from Gnodes (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
+        "Actual Position VS Raw X and Y Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
+dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
+        "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
+dataDistances = {"Distance to GNode A":list(distanceAf),
+        "Distance to GNode B":list(distanceBf),
+        "Distance to GNode C":list(distanceCf)}
 
+clusterCenterX = list()
+clusterCenterY = list()
+clusterCompVcent = list()
+for i in range(elbow.knee):
+        clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
+        clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
+for i in range(len(compVcent)):    
+        for j in range (len(compVcent[i])):
+                clusterCompVcent.append(compVcent[i][j])
+
+dataKmeans = {"Intertia":list(inertia),
+        "Centroid X":list(clusterCenterX),
+        "Centroid Y":list(clusterCenterY),
+        "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
+        "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)}
+
+db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Basic Raw Information").set(dataBasic)
+db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Actual Data").set(dataActual)
+db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
+db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
+db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
 # Upload Image Files to Firebase
 firebaseUpload(LoraRescueStorage, 
@@ -813,3 +864,9 @@ firebaseUpload(LoraRescueStorage,
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FoliumMapping.jpg',
     'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' FoliumMapping.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' FoliumMapping.html',
+    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' FoliumMapping.html')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DBSCAN.jpg',
+    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' DBSCAN.jpg')

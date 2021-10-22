@@ -79,6 +79,13 @@ Revised build v0.4.9 [Ianny]
     - New Download Link: https://sites.google.com/chromium.org/driver/
     - Old link will be deprecated soon
 
+Revised build v0.5.0
+Required libraries to install:
+ - pip install tk
+ - pip install sseclient
+Changelog:
+ - Added firebase database support
+
 # LoRa_Gateway_Calibration Build Logs
 Use information
 - To use the code no editing of the arduino code will be necessary

@@ -126,8 +126,8 @@ distanceC = list()
 phoneA = 0
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
-browser_driver = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\chromedriver.exe"
+save_destination = "C:\\LoRa_Rescue\\"
+browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -253,13 +253,6 @@ def listenForData(port,baud):
             rssiA = list()
             rssiB = list()
             rssiC = list()
-    firebase = pyrebase.initialize_app(LoraRescueStorage)
-    db = firebase.database()
-    dataRSSI = {"RSSI Gateway A":list(rssiA),
-        "RSSI Gateway B":list(rssiB),
-        "RSSI Gateway C":list(rssiC)}
-    dtemp = dtn
-    db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
     return rssiA, rssiB, rssiC, dtn, phoneA #return the variables
 
 def importCSV(save_destination, startrow, endrow):
@@ -481,6 +474,15 @@ endrow = 649
 # Import RSSI data, phone number, and timestamp
 rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 ##################################################################################################################
+
+# Save to Firebase Database Raw Data
+firebase = pyrebase.initialize_app(LoraRescueStorage)
+db = firebase.database()
+dataRSSI = {"RSSI Gateway A":list(rssiA),
+    "RSSI Gateway B":list(rssiB),
+    "RSSI Gateway C":list(rssiC)}
+dtemp = dtn
+db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
 
 #Convert RSSI to Distance
 distanceAf, distanceBf, distanceCf = rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI)

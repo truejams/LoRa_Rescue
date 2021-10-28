@@ -1,5 +1,11 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v0.5.2 [Ianny]
+- Format for Time in RawData.csv was changed to YYYY-MM-DD HH-MM-SS
+  - Functions listenForData() and importCSV() were changed accordingly
+- Code now uploads outputs files to Firebase Storage in 'Date' subfolders
+  - i.e. LoRa Rescue Data > 10-28-2021 > 10-28-2021 10-21-00 FoliumMapping.png
+
 Revised build v0.5.1 [Ianny]
 - Removed Actual Point in Folium Mapping
 - Configured dbscan() to intake unfiltered (x,y) instead of (xfilt,yfilt)
@@ -108,7 +114,7 @@ Revised build v0.3
 - Added a function for the tolerance filter
 - Changed spacing on the last part
 
-# LoRa_Gateway_Calibration Build Logs
+# LoRa_Gateway_Calibration Build Logs:
 Use information
 - To use the code no editing of the arduino code will be necessary
 - Simply plug the gateway and transmit data from the mobile node

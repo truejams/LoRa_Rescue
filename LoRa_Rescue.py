@@ -123,9 +123,8 @@ def listenForData(port,baud):
                 rssiA.append(float(data))
             elif dataID == '3':
                 timeA = str(dt.now())[0:19]
+                timeA = timeA.replace(':','-')
                 print("timeA: " + timeA)
-                dtn = timeA
-                dtn = dtn.replace(':','-')
                 rssiA = np.delete(rssiA,len(rssiA)-1)
                 rssiA = np.delete(rssiA,len(rssiA)-1)
                 okA = 1
@@ -137,6 +136,7 @@ def listenForData(port,baud):
                 rssiB.append(float(data))
             elif dataID == '3':
                 timeB = str(dt.now())[0:19]
+                timeB = timeB.replace(':','-')
                 print("timeB: " + timeB)
                 rssiB = np.delete(rssiB,len(rssiB)-1)
                 rssiB = np.delete(rssiB,len(rssiB)-1)
@@ -149,6 +149,7 @@ def listenForData(port,baud):
                 rssiC.append(float(data))
             if dataID == '3':
                 timeC = str(dt.now())[0:19]
+                timeC = timeC.replace(':','-')
                 print("timeC: " + timeC)
                 rssiC = np.delete(rssiC,len(rssiC)-1)
                 rssiC = np.delete(rssiC,len(rssiC)-1)
@@ -160,8 +161,8 @@ def listenForData(port,baud):
                 logswrite.writerow(['Phone','Time','Gateway A','Gateway B','Gateway C'])
                 for i in range(len(rssiA)):
                     logswrite.writerow([phoneA,timeA,rssiA[i],rssiB[i],rssiC[i]])
-            start_dt = dt.strptime(timeA[11:19], '%H:%M:%S')
-            end_dt = dt.strptime(timeC[11:19], '%H:%M:%S')
+            start_dt = dt.strptime(timeA[11:19], '%H-%M-%S')
+            end_dt = dt.strptime(timeC[11:19], '%H-%M-%S')
             diff = abs(end_dt - start_dt)
             print("\nA, B, and C received successfully with interval of "+str(diff))
             ok = 1
@@ -176,7 +177,7 @@ def listenForData(port,baud):
             rssiB = list()
             rssiC = list()
 
-    return rssiA, rssiB, rssiC, dtn, phoneA #return the variables
+    return rssiA, rssiB, rssiC, timeA, phoneA #return the variables
 
 def importCSV(save_destination, startrow, endrow):
     rawdataread = pd.read_csv(save_destination + 'rawData.csv', header=0)
@@ -187,7 +188,6 @@ def importCSV(save_destination, startrow, endrow):
 
     phone = rawdatalim['Phone'].to_list()[0] #reads 1st column with Phone header
     dtn  = rawdatalim['Time'].to_list()[0] #reads 1st column with Time header
-    dtn = dtn.replace(':','-') #replaces : to ; for saving files
     rssiA = rawdatalim['Gateway A'].to_numpy(float) #reads column with Gateway A header and then converts into numpy float array
     rssiB = rawdatalim['Gateway B'].to_numpy(float) #reads column with Gateway B header and then converts into numpy float array
     rssiC = rawdatalim['Gateway C'].to_numpy(float) #reads column with Gateway C header and then converts into numpy float array
@@ -770,31 +770,31 @@ db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Raw and Filtered Coordinate
 db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
 db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
-# Firebase Realtime Storage
+# Firebase Storage
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' RawTrilateration.jpg')    
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' RawTrilateration.jpg')    
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FiltTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' Elbow.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' Elbow.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' Elbow.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-Means.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' K-Means.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' K-Means.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FoliumMapping.png',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' FoliumMapping.png')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FoliumMapping.png')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FoliumMapping.html',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' FoliumMapping.html')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FoliumMapping.html')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
-    'LoRa Rescue Data/' + dtn + ' 0' + phoneA + ' DBSCAN.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' DBSCAN.jpg')

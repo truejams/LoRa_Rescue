@@ -1,6 +1,13 @@
 # LoRa_Rescue Build Logs:
 
-Revised build v0.5.0
+Revised build v0.5.1 [Ianny]
+- Removed Actual Point in Folium Mapping
+- Configured dbscan() to intake unfiltered (x,y) instead of (xfilt,yfilt)
+- Included both date and time in timeA for rawData.csv
+- Changed FoliumMapping.jpg to .png
+- Optimized layout of code
+
+Revised build v0.5.0 [Greg]
 - Added firebase database support
 - New libraries used: 
   - pip install tk
@@ -12,6 +19,7 @@ Revised build v0.4.9 [Ianny]
   - New Download Link: https://sites.google.com/chromium.org/driver/
   - Old link will be deprecated soon
 - Added a function for DBSCAN called dbscan()
+- Code uploads FoliumMapping.jpg and .html to Firebase Storage
 
 Revised build v0.4.8 [Ianny]
 - The browser_driver is the folder directory where chromedriver.exe is contained
@@ -26,7 +34,7 @@ Revised build v0.4.8 [Ianny]
 - New libraries used:
   - pip install pyrebase4
     - In the python installation folder, Python/Python39/Lib/site-packages/ rename the folder 'crypto' to 'Crypto'
-  - os library
+  - os python library
 
 Revised build v0.4.7 [Ianny]
 - Removed sklearn, serial, and datetime libraries
@@ -85,8 +93,8 @@ Revised build v0.4.1 [Ianny]
   - Added K-Means Centroids vs. Coordinates w/ Tolerance Filter in K-Means.csv
 - Minor formatting changes in CSV ouptuts for better visualization
 
-Revised build v0.3.1
-- Added Haversine function made be Benj
+Revised build v0.3.1 [Benj]
+- Added Haversine function
   - Created new variables to stare longitude and latitude values
   - Have not implemented the function for error checking
 

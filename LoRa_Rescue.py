@@ -125,9 +125,12 @@ distanceB = list()
 distanceC = list()
 phoneA = 0
 
+port = "COM3"
+baud = 115200
+
 ###### CHANGE THIS FOR YOUR DIRECTORY
-save_destination = "C:\\LoRa_Rescue\\"
-browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
+save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
+browser_driver = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\chromedriver.exe"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -143,25 +146,26 @@ LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
     'measurementId': "G-MCPTP8HPLK"}
 
 # Distance calculation constants
-n = 3.2
+# n = 3.2
+n = 3.1
 dro = 1.5
 roRSSI = -32
 
 #Trilateration calculation constants
 # GNode Coordinates
-# Format: A B C
+# Format: Atole B C
 xg = np.array([0,0,0])
 yg = np.array([0,0,0])
 # GNode Position
 # Format: A B C
-latg = np.array([14.687079,14.687085,14.686586])
-longg = np.array([121.074557,121.075146,121.074825])
+latg = np.array([14.6648848,14.6648496,14.6648452])
+longg = np.array([120.9718980,120.9718835,120.9718860])
 # Actual Node Coordinates
 xAct = np.array([0])    #Target x-coordinate
 yAct = np.array([0])    #Target y-coordinate
 # Actual Node Position
-longAct = np.array([121.074731])
-latAct = np.array([14.686970])
+longAct = np.array([120.9718816])
+latAct = np.array([14.6648547])
 # For filtering
 errorTolerance = 50
 
@@ -465,14 +469,14 @@ def dbscan(epsilon, clusterSamples, data, fig):
 
 ##################################################################################################################
 # Listen to COM port and check for errors
-# rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
+rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
 
 # Manually retrieve data from rawData.csv
 # Select the start and end rows of DATA to be read
 startrow = 591
 endrow = 649
 # Import RSSI data, phone number, and timestamp
-rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
+# rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 ##################################################################################################################
 
 # Save to Firebase Database Raw Data
@@ -514,6 +518,10 @@ xAve,yAve = trilaterate(AfAve,BfAve,CfAve,xg,yg)
 
 # Tolerance Filter
 xFilt,yFilt = tolFilter(x,y,errorTolerance)
+
+xFilt = x
+yFilt = y
+
 # Mean Coordinates after Tolerance Filter
 xFiltAve = np.mean(xFilt)
 yFiltAve = np.mean(yFilt)
@@ -584,7 +592,7 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bb
 fig += 1
 # Plot the data for trilateration w/o the filters
 plt.figure(fig)
-plt.scatter(x, y, label='Phone Node Locations', cmap='brg', s=20)
+plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xAve, yAve, label='Ave Node Locations', cmap='brg', s=20)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
 plt.title(dtn + ' 0' + phoneA  + ' RawTrilateration', y=1.05)
@@ -595,7 +603,7 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg')
 fig += 1
 # Plot the data for trilateration w/ the filters
 plt.figure(fig)
-plt.scatter(xFilt, yFilt, label='Phone Node Locations', cmap='brg', s=20)
+plt.scatter(xFilt, yFilt, label='Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xFiltAve, yFiltAve, label='Ave Node Locations', cmap='brg', s=20)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
 plt.title(dtn + ' 0' + phoneA  + ' FiltTrilateration', y=1.05)
@@ -658,12 +666,12 @@ latAct, longAct = cartToGPS(xAct, yAct)
 # Folium Mapping
 m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
 
-# Phone Node Locations
+# Mobile Node Locations
 for i in range(len(latData)):
     folium.Circle(
         radius=1,
         location=[latData[i], longData[i]],
-        tooltip='Phone Node Locations',
+        tooltip='Mobile Node Locations',
         popup=str(latData[i])+','+str(longData[i]),
         color='red',
         fill='True'

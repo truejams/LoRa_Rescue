@@ -2,10 +2,9 @@
 
 Revised build v0.5.0
 - Added firebase database support
-- Required libraries to install:
+- New libraries used: 
   - pip install tk
   - pip install sseclient
-
 
 Revised build v0.4.9 [Ianny]
 - The browser_driver now points to chromedriver.exe directly
@@ -24,6 +23,10 @@ Revised build v0.4.8 [Ianny]
 - Added a function for saving the output image files to Firebase Storage
   - Added and used a Firebase Web App called 'LoRa Rescue Storage' for this
 - Used the os library to change the working directory for Pyrebase
+- New libraries used:
+  - pip install pyrebase4
+    - In the python installation folder, Python/Python39/Lib/site-packages/ rename the folder 'crypto' to 'Crypto'
+  - os library
 
 Revised build v0.4.7 [Ianny]
 - Removed sklearn, serial, and datetime libraries
@@ -35,10 +38,14 @@ Revised build v0.4.7 [Ianny]
   - Then, Selenium snapshots the opened webpage
   - Change browser_driver directory accordingly 
   - Download chromedriver at: https://sites.google.com/a/chromium.org/chromedriver/downloads
+- New libraries used:
+  - pip install selenium
 
 Revised build v0.4.6 [Ianny]
 - In the cartToGPS() function, the types of output lat and lon were changed to lists
 - Mapped the K-means graph in an html file using the folium library
+- New libraries used:
+  - pip install folium
 
 Revised build v0.4.5 [Ianny]
 - Enabled frequency distribution
@@ -53,6 +60,12 @@ Revised build v0.4.4 [Ianny]
 Revised build v0.4.3 [Benj]
 - Removed phoneA[0:len(phoneA)]
 - Disabled frequency distribution (Error is column length does not match)
+- New libraries used:
+  - pip install pandas
+  - pip install pyproj
+  - pip install scipy
+  - pip install seaborn
+  - pip install sklearn
 
 Revised build v0.4.2 [Greg]
 - Added error function with revised input and output

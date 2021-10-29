@@ -8,15 +8,15 @@
 #define led 6
 #define reset 1
 
-byte gatewayBroadcast = 0xAA;     // address of this device
-byte subNode = 0xBA;
+byte gatewayBroadcast = 0x11;     // address of this device
+byte subNode = 0xCC;
 byte doneSubGnodeB = 0xAC;
 int dataRec = 0;
 int counter = 0;
 int timer = 0;
 char isPhone;
 char phone[10];
-int rxRSSI[60];
+int rxRSSI;
 byte source;
 char buf [4];
 int dataSize = 60;
@@ -36,7 +36,7 @@ void setup() {
   Serial.println("Gateway Node");
 
   memset (phone, 0, sizeof(phone));
-  memset (rxRSSI, 0, dataSize);
+  rxRSSI = 0;
   
   //Starts LoRa and blinks when it fails to connect
   if (!LoRa.begin(868E6)) {
@@ -63,76 +63,85 @@ void setup() {
 void loop() {
   // Set time
   currentTime = millis();
-  
+
   // Parse the packet
-  int packetSize = LoRa.parsePacket();
-  if (packetSize) {
+  if (LoRa.parsePacket()) {
     // received a packet
     digitalWrite(led,HIGH);
     source = LoRa.read();
-    counter++;
-    
-    if (source == gatewayBroadcast && counter <= dataSize) {
-      dataRec = 1;
+
+    // RSSI of packet
+    // Saves the RSSI at the rxRSSI array
+    if (source == gatewayBroadcast) {
+      digitalWrite(led,HIGH);
+      counter++;
+
       // Reads packet and saves it to phoneNum string
       int i = 0;
       while (LoRa.available()) {
-        if(counter == 1){
-          isPhone = (char)LoRa.read();
-          if (isDigit(isPhone)) phone[i] = isPhone;
-          i++;
-        } else {
-          LoRa.read();
-        }
+        isPhone = (char)LoRa.read();
+        if (isDigit(isPhone)) phone[i] = isPhone;
+        i++;
       }
-      rxRSSI[counter-1] = LoRa.packetRssi();
-      delay(20);
-      delayTime = millis();
-      if (counter == 1) Serial.println(String(phone));
-    }
-    
-    else if (source == doneSubGnodeB){
+
+      // RSSI of packet
+      // Saves the RSSI at the rxRSSI array
+      rxRSSI = LoRa.packetRssi();
+      
+      // Send Data to LoRa
       digitalWrite(led,LOW);
-      txMode();
+      delay(300);
+      digitalWrite(led,HIGH);
+      sprintf (buf, " %03i", rxRSSI);
+      LoRa.beginPacket();
+      LoRa.write(subNode);
+      LoRa.print(String(phone));
+      LoRa.print(buf);
+      LoRa.endPacket();
+      Serial.print(subNode);
+      Serial.print(String(phone));
+      Serial.println(buf);
+      rxMode();
+      memset (phone, 0, sizeof(phone));
     }
   }
+  digitalWrite(led,LOW);
+
   
   // Looks to see if receiving is done and resets counter
-  timer = currentTime-delayTime;
+//  timer = currentTime-delayTime;
 
   // Sends if data is received and 1000ms has passed
-  if (timer >= 500){
-    counter = 0;
-    digitalWrite(led,LOW);
-
-    // displays RSSI
-    if(dataRec){
-      Serial.print("RSSI: Datasize = ");
-      dataSize = sizeof(rxRSSI)/4;
-      Serial.println(dataSize);
-      for(int i=0;i<dataSize;i++){
-        Serial.print(rxRSSI[i]);
-        Serial.print(" ");
-        if(i==19||i==39||i==59) Serial.println();
-      }
-      digitalWrite(led,HIGH);
-      delay(6500);
-      txMode(); // Starting this line change for stuff
-    }
-    dataRec = 0;
-  }
+//  if (timer >= 500){
+//    counter = 0;
+//    digitalWrite(led,LOW);
+//
+//    // displays RSSI
+//    if(dataRec){
+//      Serial.print("RSSI: Datasize = ");
+//      dataSize = sizeof(rxRSSI)/4;
+//      Serial.println(dataSize);
+//      for(int i=0;i<dataSize;i++){
+//        Serial.print(rxRSSI[i]);
+//        Serial.print(" ");
+//        if(i==19||i==39||i==59) Serial.println();
+//      }
+//      digitalWrite(led,HIGH);
+//      delay(6500);
+//      txMode(); // Starting this line change for stuff
+//    }
+//    dataRec = 0;
+//  }
   
   // resets arduino board once the runtime is near 50 days (internal clock overflows)
-  if (currentTime >= 4294967200){
-    digitalWrite(reset, LOW);
-  }
+//  if (currentTime >= 4294967200){
+//    digitalWrite(reset, LOW);
+//  }
 }
 
 ////////////////////////////////////////////////////////////////////
 // Sets LoRa to receive mode
 void rxMode(){
-  delay(2000);
-  Serial.println("Rx mode");
   LoRa.disableInvertIQ();               // normal mode
   LoRa.receive();                       // set receive mode
 }
@@ -153,7 +162,7 @@ void txMode(){
   Serial.println(sendPhone);
   LoRa.endPacket();
   for (int i=0; i<dataSize; i++){
-    sprintf (buf, "%03i", rxRSSI[i]);
+    sprintf (buf, "%03i", rxRSSI);
     LoRa.beginPacket();
     LoRa.write(subNode);
     Serial.println(buf);
@@ -168,7 +177,7 @@ void txMode(){
 // This function is called once the transmitting of the phone number to the database is done
 void doneTx() {
   memset (phone, 0, sizeof(phone));
-  memset (rxRSSI, 0, sizeof(rxRSSI));
+//  memset (rxRSSI, 0, sizeof(rxRSSI));
   Serial.println("Tx Done");
   delay(1000);
   rxMode();

@@ -8,19 +8,20 @@
 #define led 6
 #define reset 4
 
-byte gatewayBroadcast = 0xAA;   // address of gnode A
+byte gatewayBroadcast = 0x11;   // address of gnode A
 byte subGnodeB = 0xBB;      // address of gnode B
 byte subGnodeC = 0xCC;      // address of gnode C
 byte doneSubGnodeB = 0xAB;
 char gway='C';
 char phone[10];
+char hopData[15];
 char isPhone;
 int fromHop = 0;
 int counter = 0;
 int timer = 0;
 int source;
 String phoneNum0,phoneNum1;
-int rxRSSI[60],hopRSSI[60];
+int rxRSSI,hopRSSI[60];
 int dataSize = 60;
 String RssiReading;
 unsigned long currentTime;
@@ -44,7 +45,7 @@ void setup() {
   Serial.begin(115200);
   
   memset (hopRSSI, 0, dataSize);
-  memset (rxRSSI, 0, dataSize);
+  rxRSSI = 0;
   phoneNum0 = "";
   phoneNum1 = "";
   fromHop = 3;
@@ -69,7 +70,7 @@ void setup() {
   rxMode();
 }
 
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
   // Set time
   currentTime = millis();
@@ -82,44 +83,37 @@ void loop() {
     source = LoRa.read();
     /////////////////////////////////////
     //////////     RX RSSI     //////////
-    if (source == gatewayBroadcast && counter <= dataSize) {
-      fromHop = 0;
+    if (source == gatewayBroadcast) {
       digitalWrite(led,HIGH);
       counter++;
 
       // Reads packet and saves it to phoneNum string
       int i = 0;
       while (LoRa.available()) {
-        if(counter <= 1){
-          isPhone = (char)LoRa.read();
-          if (isDigit(isPhone)) phone[i] = isPhone;
-          i++;
-        } else {
-          LoRa.read();
-        }
+        isPhone = (char)LoRa.read();
+        if (isDigit(isPhone)) phone[i] = isPhone;
+        i++;
       }
 
       // RSSI of packet
       // Saves the RSSI at the rxRSSI array
-      rxRSSI[counter-1] = LoRa.packetRssi();
+      rxRSSI = LoRa.packetRssi();
 
-      // Display Number
-      if(counter == 1){
-        Serial.print("A1");
-        for(int i=0;i<10;i++) Serial.print(phone[i]);
-        Serial.println();
-        memset (phone, 0, sizeof(phone));
-      } 
+      // Send Data to Serial
+      Serial.print("A");
+      for(int i=0;i<10;i++) Serial.print(phone[i]);
+      Serial.print(" ");
+      Serial.println(rxRSSI);
+      memset (phone, 0, sizeof(phone));
     }
     /////////////////////////////////////
     
     //////////////////////////////////////
     //////////     HOP RSSI     //////////
-    if (source == subGnodeB || source == subGnodeC && counter <= dataSize){
-      fromHop = 1;
+    if (source == subGnodeB || source == subGnodeC){
+      digitalWrite(led,HIGH);
       counter++;
       
-      digitalWrite(led,HIGH);
       if(source == subGnodeB){
         gway = 'B';
       } else if (source == subGnodeC){
@@ -128,75 +122,67 @@ void loop() {
 
       int i = 0;
       while (LoRa.available()){
-        if(counter == 1){
-          isPhone = (char)LoRa.read();
-          if (isDigit(isPhone)) phone[i] = isPhone; 
-          i++;
-        } else {
-          RssiReading += (char)LoRa.read();
-        }
+        hopData[i] = (char)LoRa.read();
+        i++;
       }
 
-      hopRSSI[counter-2] = RssiReading.toInt();
-      RssiReading = "";
-      if(counter == 1){
-        Serial.print(gway);
-        Serial.print("1");
-        for(int i=0;i<10;i++) Serial.print(phone[i]);
-        Serial.println();
-        memset (phone, 0, sizeof(phone));
-      }
+      // Send Data to Serial
+      Serial.print(gway);
+      for(int i=0;i<15;i++) Serial.print(hopData[i]);
+      Serial.println();
+      memset (hopData, 0, sizeof(hopData));
     }
     //////////////////////////////////////
     
-    delayTime = millis();
+//    delayTime = millis();
   }
+  digitalWrite(led,LOW);
 
   // Looks to see if receiving is done and resets counter
-  timer = abs(currentTime - delayTime);
+//  timer = abs(currentTime - delayTime);
   
   ////////////////////////////////////////////////////////////
   ////////////////////////////////////////////////////////////
   // This runs when a data is received and 500ms has passed.
-  if (timer >= 500){
-    counter = 0;
-    // sends data to other gateway nodes if Rx is done
-    // resets phoneNum after
-    if (fromHop == 1){
-      for(int i=0;i<dataSize;i++){
-        Serial.print(gway);
-        Serial.print("2");
-        Serial.println(hopRSSI[i]);
-      }
-      Serial.print(gway);
-      Serial.println("3");
-      if(gway == 'B'){
-        gnodeBdone();
-      }
-      memset (hopRSSI, 0, dataSize);
-      memset (d, 0, dataSize);
-      digitalWrite(led,LOW);
-    } else if (fromHop == 0) {
-      for(int i=0;i<dataSize;i++){
-        Serial.print("A2");
-        // RSSI To distance
-        //d[i] = pow(10,((roRSSI-rxRSSI[i])/(10*n)))*dro;
-        Serial.println(rxRSSI[i]);
-      }
-      Serial.println("A3");
-      digitalWrite(led,LOW);
-      memset (rxRSSI, 0, dataSize);
-    }
-    fromHop = 3;
-  }
+//  if (timer >= 500){
+//    counter = 0;
+//    // sends data to other gateway nodes if Rx is done
+//    // resets phoneNum after
+//    if (fromHop == 1){
+//      for(int i=0;i<dataSize;i++){
+//        Serial.print(gway);
+//        Serial.print("2");
+//        Serial.println(hopRSSI[i]);
+//      }
+//      Serial.print(gway);
+//      Serial.println("3");
+//      if(gway == 'B'){
+//        gnodeBdone();
+//      }
+//      memset (hopRSSI, 0, dataSize);
+//      memset (d, 0, dataSize);
+//      digitalWrite(led,LOW);
+//    } else if (fromHop == 0) {
+//      for(int i=0;i<dataSize;i++){
+//        Serial.print("A2");
+//        // RSSI To distance
+//        //d[i] = pow(10,((roRSSI-rxRSSI[i])/(10*n)))*dro;
+//        Serial.println(rxRSSI[i]);
+//      }
+//      Serial.println("A3");
+//      digitalWrite(led,LOW);
+//      memset (rxRSSI, 0, dataSize);
+//    }
+//    fromHop = 3;
+//  }
   
   // resets arduino board once the runtime is near 50 days (internal clock overflows)
-  if (currentTime >= 4294967200){
-    resetArduino();
-  }
+//  if (currentTime >= 4294967200){
+//    resetArduino();
+//  }
 }
 
-////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets LoRa to receive mode
 void rxMode(){

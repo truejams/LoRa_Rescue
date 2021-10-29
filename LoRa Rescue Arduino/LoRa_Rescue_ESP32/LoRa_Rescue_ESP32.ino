@@ -12,12 +12,16 @@
 #define TXD2 17
 
 // Insert your own wifi network SSID and Password
-const char *ssid = "WeeFee 433";
+const char *ssid = "LoRa Rescue Mobile Node";
 const char *password = "12345678";
 
 const int led = 2;
 String phoneNumber = "0";
+String phoneNumberTemp = "0";
 String loraState = "0";
+int serialComm = 1;
+int dev = 0;
+int delayMult = 0;
 
 const char* PHON_INPUT = "value";
 const char* TRAN_INPUT = "value";
@@ -149,12 +153,13 @@ const char htmlCode[] PROGMEM = R"rawliteral(
     <br><br>
     <div id="snackbar">
       <br><strong>Transmitting</strong>
-      <br><small>to gateway</small>
+      <br><small>to gateway nodes</small>
     </div>
   
     <script>
       var phoneNumber = 0;
       var stopSpam = 0;
+      var send = 1;
 
       function updatePhone(element) {
         phoneNumber = document.getElementById("phone").value;
@@ -177,28 +182,32 @@ const char htmlCode[] PROGMEM = R"rawliteral(
       }
       
       function buttClick(){
+        var x = document.getElementById("snackbar");
         if(!stopSpam){
-          var x = document.getElementById("snackbar");
-          x.className = "show";
-          setTimeout(function(){ x.className = x.className.replace("show", ""); }, 20000);
-          stopSpam = 1;
-          document.getElementById("phoneValue").style.animation = 'greyCycle 1s ease 12 alternate';
-          document.getElementById("bu").style.backgroundColor = '#8a3323';
-          document.getElementById("bu").style.animation = 'none';
-          document.getElementById("bu").innerHTML = "<strong>     .  .  .     </strong>";
-
-          setTimeout(function(){
-            stopSpam = 0;
+          if(send){
+            x.className = "show";
+            document.getElementById("phoneValue").style.animation = 'greyCycle 1s ease infinite alternate';
+            document.getElementById("bu").style.backgroundColor = '#8a3323';
+            document.getElementById("bu").style.animation = 'none';
+            document.getElementById("bu").innerHTML = "<strong>     Stop Transmitting     </strong>";
+            send = 0;
+            var bPress = 1;
+            var httpRequest = new XMLHttpRequest();
+            httpRequest.open("GET", "/update?value="+bPress, true);
+            httpRequest.send();
+          }
+          else if(!send){
+            x.className = x.className.replace("show", "");
             document.getElementById("phoneValue").style.animation = 'none';
             document.getElementById("bu").style.backgroundColor = '#33cccc';
             document.getElementById("bu").style.animation = 'blueCycle 3s linear infinite alternate';
-            document.getElementById("bu").innerHTML = "<strong>  Retransmit  </strong>";
-          }, 20000);
-
-          var bPress = 1;
-          var httpRequest = new XMLHttpRequest();
-          httpRequest.open("GET", "/update?value="+bPress, true);
-          httpRequest.send();
+            document.getElementById("bu").innerHTML = "<strong>  Retransmit LoRa  </strong>";
+            send = 1;
+            var bPress = 0;
+            var httpRequest = new XMLHttpRequest();
+            httpRequest.open("GET", "/update?value="+bPress, true);
+            httpRequest.send();
+          }          
         }
       }
     </script>
@@ -212,7 +221,7 @@ const char htmlCode[] PROGMEM = R"rawliteral(
 
 void setup(){
   setCpuFrequencyMhz(80); //Set CPU clock to 80MHz
-  // Begine Serial Communications over USB
+  // Begin Serial Communications over USB
   Serial.begin(115200);
   Serial2.begin(9600, SERIAL_8N1,  RXD2, TXD2);
   WiFi.softAP(ssid, password);
@@ -235,22 +244,32 @@ void setup(){
     if (request->hasParam(PHON_INPUT)) {
       inputMessage = request->getParam(PHON_INPUT)->value();
       phoneNumber = inputMessage;
+      phoneNumber.trim();
+      phoneNumberTemp = phoneNumber;
+      phoneNumberTemp.remove(4,1);
+      if(phoneNumberTemp == "1234"){
+        phoneNumberTemp = phoneNumber;
+        phoneNumberTemp.remove(0,4);
+        if (phoneNumberTemp == "0") phoneNumberTemp = "1";
+        developerMode(phoneNumberTemp.toInt()*100);
+      }
+      if(phoneNumberTemp == "4321"){
+        phoneNumberTemp = phoneNumber;
+        phoneNumberTemp.remove(0,4);
+        if (phoneNumberTemp == "0") phoneNumberTemp = "1";
+        developerMode(phoneNumberTemp.toInt()*1000);
+      }
     }
     else {
       inputMessage = "Did not receive";
     }
-    phoneNumber.trim();
+    
+    
+    phoneNumber.replace("+", "");
     phoneNumber.replace("-", "");
     phoneNumber.replace(" ", "");
-    if(phoneNumber.startsWith("63")){
-      phoneNumber.remove(0,2);
-    }
-    if(phoneNumber.startsWith("+63")){
-      phoneNumber.remove(0,3);
-    }
-    if(phoneNumber.startsWith("0")){
-      phoneNumber.remove(0,1);
-    }
+    if(phoneNumber.startsWith("63")) phoneNumber.remove(0,2);
+    if(phoneNumber.startsWith("0")) phoneNumber.remove(0,1);
     Serial.println(phoneNumber);
     request->send(200, "text/plain", "OK");
   });
@@ -273,19 +292,39 @@ void setup(){
   
   // Start server (remembering its on port 80)
   webServer.begin();
-  Serial.println("Server started");
-  Serial2.println("Server started");
 }
   
 void loop() {
   if(loraState == "1"){
     digitalWrite(led,HIGH);
-    Serial.println("Sending data to LoRa node");
-    Serial.println("Data -> Phone = "+phoneNumber);
     Serial2.println(phoneNumber);
-    
-    loraState = "0";
-    Serial.println("LoRa Transmit done.");
+    if (dev == 0) delay(3000);
+    if (dev == 1) delay(delayMult);
+  }
+  else if (loraState == "0") {
     digitalWrite(led,LOW);
+    Serial2.println(0);
+    delay(100);
+  }
+}
+
+void developerMode(int mult) {
+  delayMult = mult;
+  if (dev == 0){
+    dev = 1;
+    for (int i = 0; i<9; i++){
+      digitalWrite(led,HIGH);
+      delay(100);
+      digitalWrite(led,LOW);
+      delay(100);
+    }
+  } else {
+    dev = 0;
+    for (int i = 0; i<3; i++){
+      digitalWrite(led,HIGH);
+      delay(300);
+      digitalWrite(led,LOW);
+      delay(300);
+    }
   }
 }

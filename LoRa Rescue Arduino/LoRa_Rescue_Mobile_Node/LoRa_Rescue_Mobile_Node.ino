@@ -6,9 +6,12 @@
 // Defines LED pin
 #define led 6
 
-byte destination = 0xAA;      // destination: Gateway broadcast
-String phoneNum = "";
+byte srcAddress = 0x11;      // destination: Gateway broadcast
+char phoneNum[10];
+char phoneNumTemp[10];
 int i=0;
+int j=0;
+int set=0;
 
 // del after test
 char isPhone;
@@ -23,6 +26,7 @@ char phone[10];
 int rxRSSI[60];
 int source;
 char buf [4];
+char buf2 [4];
 int dataSize = 60;
 unsigned long currentTime;
 unsigned long delayTime;
@@ -52,7 +56,6 @@ void setup() {
   }
   
   // Sets LoRa preferences
-  LoRa.disableInvertIQ();
   LoRa.setTxPower(18.5,PA_OUTPUT_PA_BOOST_PIN);
   LoRa.setSignalBandwidth(125E3);
   LoRa.setSpreadingFactor(9);
@@ -61,39 +64,45 @@ void setup() {
   delay(1000);
   digitalWrite(led, HIGH);
   delay(2000);
+  
 }
 
 void loop() {
   // Checks if there is UART data from the ESP32
-  digitalWrite(led, LOW);
-  if(Serial1.available()){
-    phoneNum = Serial1.readString();
-    if(phoneNum == "Server started"){
-      phoneNum = "";
-    } else {
+  j = 0;
+  while(Serial1.available()){
+    Serial1.readBytesUntil('\n',phoneNum,10);
+    //Serial.println(phoneNum);
+    if(phoneNum[0] != '0' && j < 1){
+      if(set == 0){
+        for(i=0;i<10;i++) phoneNumTemp[i] = phoneNum[i];
+      }
+      Serial.println(phoneNumTemp); 
+      Serial.println();
+      
       ///// Insert LoRa send code here
       digitalWrite(led,HIGH);
-      for(int i=0; i<60-1; i++){
-        // send packet
-        LoRa.beginPacket();
-        LoRa.write(destination); // destination
-        LoRa.print(phoneNum);
-        LoRa.endPacket();
-        delay(100);
+      set = 1;
+      // send packet
+      LoRa.beginPacket();
+      LoRa.write(srcAddress); // destination
+      LoRa.print(phoneNumTemp);
+      LoRa.endPacket();
+      digitalWrite(led,LOW);
       ///// End of LoRa send code
-      }
-      digitalWrite(led, LOW);
-      LoRa.receive();
-      rxMode();
+  //    digitalWrite(led, LOW);
+  //    LoRa.receive();
+  //    rxMode(); 
     }
-    // Reset phoneNum to "" to avoid sending unwanted signals
-    i = 0;
-    phoneNum = "";
+    else if(phoneNum[0] == '0') {
+      digitalWrite(led,LOW);
+      memset(phoneNum, 0, sizeof(phoneNum));
+      set = 0;
+    }
+    j++;
+    if(j == 2) j = 0;
   }
-  
-  // Reset phoneNum to "" to avoid sending unwanted signals
-  i = 0;
-  phoneNum = "";
+  delay(50);
 }
 
 void rxMode(){

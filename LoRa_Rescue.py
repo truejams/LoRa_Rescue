@@ -522,13 +522,13 @@ rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 
 # Save RSSI values to Firebase Database
-firebase = pyrebase.initialize_app(LoraRescueStorage)
-db = firebase.database()
-dataRSSI = {"RSSI Gateway A":list(rssiA),
-    "RSSI Gateway B":list(rssiB),
-    "RSSI Gateway C":list(rssiC)}
-dtemp = dtn
-db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
+# firebase = pyrebase.initialize_app(LoraRescueStorage)
+# db = firebase.database()
+# dataRSSI = {"RSSI Gateway A":list(rssiA),
+#     "RSSI Gateway B":list(rssiB),
+#     "RSSI Gateway C":list(rssiC)}
+# dtemp = dtn
+# db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
 
 # Convert RSSI to Distance
 distanceAf, distanceBf, distanceCf = rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI)

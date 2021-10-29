@@ -21,7 +21,7 @@ import pyrebase
 from sklearn.cluster import DBSCAN
 
 # Variable Declaration
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
 # browser_driver = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\chromedriver.exe"
@@ -33,7 +33,7 @@ browser_driver = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\chromedriver.exe"
 os.chdir(save_destination)
 
 # Arduino Configuration
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 port = "COM3"
 baud = 115200
 
@@ -50,12 +50,12 @@ LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
 # Read RawData.csv Configuration
 # In excel, the first row is treated as Row 0
     # Basically, subtract 1 from excel row number
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 startrow = 1
 endrow = 58
 
 # RSSI to Distance calculation constants
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 n = 5
 dro = 1.5
 roRSSI = -32
@@ -63,7 +63,7 @@ roRSSI = -32
 # Trilateration calculation constants
 # GNode GPS Coordinates
 # Format: A B C
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 latg = np.array([14.6648848,14.6648496,14.6648452])
 longg = np.array([120.9718980,120.9718835,120.9718860])
 
@@ -73,7 +73,7 @@ xg = np.array([0,0,0])
 yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 latAct = np.array([14.6648547])
 longAct = np.array([120.9718816])
 
@@ -82,11 +82,11 @@ xAct = np.array([0]) #Target x-coordinate
 yAct = np.array([0]) #Target y-coordinate
 
 # Tolerance filter error margin
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 errorTolerance = 50
 
 # DBSCAN calculation constants
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 # Will be removed when an optimization function is made
 epsilon = 50
 clusterSamples = 3
@@ -285,6 +285,11 @@ def kmeansOptimize(data):
 
     return kmeans,inertia,elbow
 
+def distanceFormula(x1, y1, x2, y2):
+    distance = np.sqrt(((x1-x2)**2)+((y1-y2)**2))
+
+    return distance
+
 def haversine(lat1, lon1, lat2, lon2):
     miles = 3959.87433
     meters = 6372.8*1000
@@ -299,7 +304,7 @@ def haversine(lat1, lon1, lat2, lon2):
     a = sin(dLat/2)**2 + cos(lat1)*cos(lat2)*sin(dLon/2)**2
     c = 2*asin(sqrt(a))
 
-    distance = R * c
+    distance = np.array([R*c])
 
     return distance
 
@@ -347,17 +352,6 @@ def errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data):
 
     return compVact, centVave, compVcent
 
-def actualDist(xAct, yAct, xg, yg):
-    #Computed distanceAf, Bf, Cf
-    comp_distanceAf = list()
-    comp_distanceBf = list()
-    comp_distanceCf = list()
-    comp_distanceAf = np.sqrt(((xAct-xg[0])**2)+((yAct-yg[0])**2))
-    comp_distanceBf = np.sqrt(((xAct-xg[1])**2)+((yAct-yg[1])**2))
-    comp_distanceCf = np.sqrt(((xAct-xg[2])**2)+((yAct-yg[2])**2))
-
-    return comp_distanceAf, comp_distanceBf, comp_distanceCf
-
 def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Initialize Firebase Storage
     firebase = pyrebase.initialize_app(firebaseConfig)
@@ -392,11 +386,11 @@ def dbscan(epsilon, clusterSamples, data, fig):
 # Retrieve RSSI data, date and time, and phone number
 
 # Listen to COM port and check for errors
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
 
 # Manually retrieve data from rawData.csv
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 
 # Save RSSI values to Firebase Database
@@ -440,7 +434,7 @@ xAve,yAve = trilaterate(AfAve,BfAve,CfAve,xg,yg)
 xFilt,yFilt = tolFilter(x,y,errorTolerance)
 
 # Disable Tolerance Filter
-###### CHANGE THIS ACCORDINGLY ######
+################## CHANGE THIS ACCORDINGLY ##################  
 xFilt = x
 yFilt = y
 
@@ -448,8 +442,16 @@ yFilt = y
 xFiltAve = np.mean(xFilt)
 yFiltAve = np.mean(yFilt)
 
-# Compute actual distance of phone node to GNodes
-comp_distanceAf, comp_distanceBf, comp_distanceCf = actualDist(xAct, yAct, xg, yg)
+# Compute actual distances of GNodes to mobile node
+################## CHANGE THIS ACCORDINGLY ##################  
+# Use distance formula
+# comp_distanceAf = distanceFormula(xAct, yAct, xg[0], yg[0])
+# comp_distanceBf = distanceFormula(xAct, yAct, xg[1], yg[1])
+# comp_distanceCf = distanceFormula(xAct, yAct, xg[2], yg[2])
+# Use haversine formula
+comp_distanceAf = haversine(latAct, longAct, latg[0], longg[0])
+comp_distanceBf = haversine(latAct, longAct, latg[1], longg[1])
+comp_distanceCf = haversine(latAct, longAct, latg[2], longg[2])
 
 # Plot the data frequency of the gateways
 fig = 1

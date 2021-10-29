@@ -1,5 +1,10 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v0.5.3 [Ianny]
+- Renamed actualDist() to distanceFormula(), and generalized its definition
+- Code can now use haversine() for computing the actual distances of GNodes to the mobile node
+  - haversine() is an alternative to distanceFormula(), change accordingly
+
 Revised build v0.5.2 [Ianny]
 - Format for Time in RawData.csv was changed to YYYY-MM-DD HH-MM-SS
   - Functions listenForData() and importCSV() were changed accordingly

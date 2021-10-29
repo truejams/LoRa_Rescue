@@ -1,5 +1,12 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v0.5.4 [Greg]
+- Added 2 new functions: serialListener and checkDatabase
+- Added support for database retreival to check if data is sufficient for trilateration and clustering
+- Added 2 new libraries:
+  - import json
+  - from datetime import timedelta as td
+
 Revised build v0.5.3 [Ianny]
 - Renamed actualDist() to distanceFormula(), and generalized its definition
 - Code can now use haversine() for computing the actual distances of GNodes to the mobile node

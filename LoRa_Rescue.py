@@ -1,6 +1,4 @@
-# LoRa Rescue Code
-
-# Libraries
+# Import Libraries
 from sklearn.cluster import KMeans
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,9 +14,11 @@ from selenium import webdriver
 import serial
 import time
 from datetime import datetime as dt
+from datetime import timedelta as td
 import os
 import pyrebase
 from sklearn.cluster import DBSCAN
+import json
 
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
@@ -26,15 +26,15 @@ from sklearn.cluster import DBSCAN
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
 # browser_driver = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\chromedriver.exe"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
-browser_driver = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\chromedriver.exe"
+save_destination = "C:\\LoRa_Rescue\\"
+browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
 
 # Arduino Configuration
 ################## CHANGE THIS ACCORDINGLY ##################  
-port = "COM3"
+port = "COM9"
 baud = 115200
 
 # Firebase Web App Configuration
@@ -178,6 +178,133 @@ def listenForData(port,baud):
             rssiC = list()
 
     return rssiA, rssiB, rssiC, timeA, phoneA #return the variables
+
+def serialListener(port,baud):
+    #Define variables for use
+    print("Listening to port "+str(port)+" at "+str(baud))
+    arduino = serial.Serial(port, baud)
+    rssiA = list()
+    rssiB = list()
+    rssiC = list()
+    phoneA = 0
+    phoneB = 0
+    phoneC = 0
+    done= 0
+    ok = [0,0,0,0]
+    
+    while done == 0:
+        arduino_raw_data = arduino.readline()
+        decoded_data = str(arduino_raw_data.decode("utf-8")) #convert to utf-8
+        rawData = decoded_data.replace('\n','') #remove \n in the decoded data
+        rawData = rawData.replace('\r','')
+        gatewayID = rawData[:1] #get gateway ID
+        tempData = rawData[1:] #get data
+        dataSplit = list()
+        dataSplit = tempData.split()
+        phone = dataSplit[0]
+        rssi = dataSplit[1].replace("\x00","")
+        rssiTemp = rssi
+        if not(rssiTemp.replace("-","").isnumeric()): continue
+        dtn = str(dt.now())
+        dtn = dtn[0:19]
+        dateNow = dtn[0:10]
+        timeNow = dtn[11:19]
+        print(dtn + " Received Gateway " + gatewayID + ": +63" + phone + " with RSSI: " + rssi)
+
+        if gatewayID == 'A':
+            ok[0] = 1
+            phoneA = phone
+            temprssiA = rssi
+        elif gatewayID == 'B':
+            ok[1] = 1
+            phoneB = phone
+            temprssiB = rssi
+        elif gatewayID == 'C':
+            ok[2] = 1
+            phoneC = phone
+            temprssiC = rssi
+        else:
+            print("Unrecognized Serial Data: " + rawData)
+
+        # Save to Database
+        firebase = pyrebase.initialize_app(LoraRescueStorage)
+        db = firebase.database()
+        if sum(ok) == 3 and phoneA == phoneB and phoneB == phoneC:
+            for i in range(3): ok[i] = 0
+            ok[3], timePrev = checkDatabase(dateNow,timeNow,phone)
+            timeNow = timePrev
+            rssiAlist = db.child(dateNow).child(timeNow).child("Raw RSSI Values").child("RSSI Gateway A").get().val()
+            if rssiAlist != None:
+                rssiAlist.append(temprssiA)
+            else:
+                rssiAlist = [temprssiA]
+            db.child(dateNow).child(timeNow).child("Raw RSSI Values").child("RSSI Gateway A").set(rssiAlist)
+            rssiBlist = db.child(dateNow).child(timeNow).child("Raw RSSI Values").child("RSSI Gateway B").get().val()
+            if rssiBlist != None:
+                rssiBlist.append(temprssiB)
+            else:
+                rssiBlist = [temprssiB]
+            db.child(dateNow).child(timeNow).child("Raw RSSI Values").child("RSSI Gateway B").set(rssiBlist)
+            rssiClist = db.child(dateNow).child(timeNow).child("Raw RSSI Values").child("RSSI Gateway C").get().val()
+            if rssiClist != None:
+                rssiClist.append(temprssiC)
+            else:
+                rssiClist = [temprssiC]
+            db.child(dateNow).child(timeNow).child("Raw RSSI Values").child("RSSI Gateway C").set(rssiClist)
+
+            if ok[3] == 1:
+                ok = [0,0,0,0]
+                done = 1
+            
+    # Write to CSV
+    databaseEntries = db.child(dateNow).child(timePrev).child("Raw RSSI Values").get()
+    df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
+    rssiA = df.iloc[0, 1]
+    rssiB = df.iloc[1, 1]
+    rssiC = df.iloc[2, 1]
+    dtn = dateNow + " " + timeNow
+    dtn = dtn.replace(':','-')
+    with open(save_destination+'rawData.csv', mode='a') as logs:
+        logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
+        logswrite.writerow(['Phone','Time','Gateway A','Gateway B','Gateway C'])
+        for i in range(len(rssiA)):
+            logswrite.writerow([phone,dtn,rssiA[i],rssiB[i],rssiC[i]])
+    return rssiA, rssiB, rssiC, dtn, phone
+
+def checkDatabase(dateNow,timeNow,phone):
+    check = 0
+    timePrev = timeNow
+    n = 30 #This is range for time
+    firebase = pyrebase.initialize_app(LoraRescueStorage)
+    db = firebase.database()
+    databaseEntries = db.child(dateNow).get() #retreive the realtime database datapoints
+    if databaseEntries.val() == None:
+        check = 0
+        timePrev = timeNow + " 0" + phone
+        return check, timePrev
+    x = json.dumps(list(databaseEntries.val().items())) #convert ordered list to json
+    df = pd.read_json(x) #convert json to pandas dataframe for processing
+    entries = df.iloc[:, 0].tolist() #convert pandas dataframe to list of strings
+    for i in range(len(entries)):
+        checkDatePhone = entries[i].split()
+        if checkDatePhone[1] == "0"+phone:
+            tPrev = dt.strptime(checkDatePhone[0],'%H:%M:%S')
+            tNow = dt.strptime(timeNow,'%H:%M:%S') - td(minutes=n)
+            if tPrev > tNow:
+                timePrev = str(tPrev)[11:19]
+            else:
+                timePrev = timeNow
+    timePrev = timePrev + " 0" + phone
+    databaseEntries = db.child(dateNow).child(timePrev).child("Raw RSSI Values").get()
+    if databaseEntries.val() == None:
+        check = 0
+        return check, timePrev
+    df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
+    entries = df.iloc[0, 1]
+    print(dateNow + " " + timePrev + " has " + str(len(entries)) + " entries")
+    if len(entries) >= 50:
+        check = 1
+    return check, timePrev
 
 def importCSV(save_destination, startrow, endrow):
     rawdataread = pd.read_csv(save_destination + 'rawData.csv', header=0)
@@ -388,10 +515,11 @@ def dbscan(epsilon, clusterSamples, data, fig):
 # Listen to COM port and check for errors
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
+rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
-rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
+# rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 
 # Save RSSI values to Firebase Database
 firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -766,11 +894,14 @@ dataKmeans = {"Intertia":list(inertia),
         "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
         "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)}
 
-db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Basic Raw Information").set(dataBasic)
-db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Actual Data").set(dataActual)
-db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
-db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
-db.child(dtn.replace("-",":")+' '+'0'+phoneA).child("Kmeans Data").set(dataKmeans)
+dateAndTime = dtn.split()
+dateNow = dateAndTime[0]
+timeNow = dateAndTime[1].replace("-",":")
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
 # Firebase Storage
 firebaseUpload(LoraRescueStorage, 

@@ -977,30 +977,30 @@ db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmean
 # Firebase Storage
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' RawTrilateration.jpg')    
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')    
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FiltTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FiltTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' Elbow.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' Elbow.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/Elbow.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-Means.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' K-Means.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' FoliumMapping.png',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FoliumMapping.png')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' FoliumMapping.png',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/FoliumMapping.png')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FoliumMapping.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' FoliumMapping.html')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FoliumMapping.html')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' DBSCAN.jpg')
-
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
+    
 print("Done!")

@@ -1,5 +1,9 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v0.5.5 [Greg]
+- Revised Trilateration Calculation
+- Added importDatabase function to import from firebase database
+
 Revised build v0.5.4 [Greg]
 - Added 2 new functions: serialListener and checkDatabase
 - Added support for database retreival to check if data is sufficient for trilateration and clustering

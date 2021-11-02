@@ -54,18 +54,19 @@ LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
 startrow = 1
 endrow = 58
 
-# RSSI to Distance calculation constants
+# RSSI to Distance and Trilateration calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
-n = 5
+n = 2.8
 dro = 1.5
 roRSSI = -32
+points = 100
 
 # Trilateration calculation constants
 # GNode GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
-latg = np.array([14.6648848,14.6648496,14.6648452])
-longg = np.array([120.9718980,120.9718835,120.9718860])
+latg = np.array([14.665092310334686, 14.665754710334026, 14.664694310334996])
+longg = np.array([120.97203469024431, 120.97128459024518, 120.97234819024389])
 
 # GNode Cartesian Coordinates
 # Format: A B C
@@ -74,8 +75,8 @@ yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
 ################## CHANGE THIS ACCORDINGLY ##################  
-latAct = np.array([14.6648547])
-longAct = np.array([120.9718816])
+latAct = np.array([14.66545241])
+longAct = np.array([120.97169829])
 
 # Actual Mobile Node Cartesian Coordinates
 xAct = np.array([0]) #Target x-coordinate
@@ -262,7 +263,7 @@ def serialListener(port,baud):
     rssiA = df.iloc[0, 1]
     rssiB = df.iloc[1, 1]
     rssiC = df.iloc[2, 1]
-    dtn = dateNow + " " + timeNow
+    dtn = dateNow + " " + timeNow[0:8]
     dtn = dtn.replace(':','-')
     with open(save_destination+'rawData.csv', mode='a') as logs:
         logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
@@ -321,6 +322,37 @@ def importCSV(save_destination, startrow, endrow):
     
     return rssiA, rssiB, rssiC, dtn, phone
 
+def importDatabase(date, time, phone):
+    phoneTime = time + " " + phone
+    firebase = pyrebase.initialize_app(LoraRescueStorage)
+    db = firebase.database()
+    databaseEntries = db.child(date).child(phoneTime).child("Raw RSSI Values").get()
+    df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
+    rssiA = df.iloc[0, 1]
+    rssiB = df.iloc[1, 1]
+    rssiC = df.iloc[2, 1]
+    databaseEntries = db.child(date).child(phoneTime).child("Actual Data").get()
+    df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
+    mobileLatLong = df.iloc[1, 1].split()
+    latAct = np.array([float(mobileLatLong[0])])
+    longAct = np.array([float(mobileLatLong[1])])
+    latAct,longAct = cartToGPS(latAct,longAct)
+
+    databaseEntries = db.child(date).child(phoneTime).child("Basic Raw Information").get()
+    df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
+    gnodeA = df.iloc[3, 1].split()
+    gnodeB = df.iloc[4, 1].split()
+    gnodeC = df.iloc[5, 1].split()
+    dtn = date + " " + time
+    dtn = dtn.replace(':','-')
+    latg = np.array([float(gnodeA[0]),float(gnodeB[0]),float(gnodeC[0])])
+    longg = np.array([float(gnodeA[1]),float(gnodeB[1]),float(gnodeC[1])])
+    latg,longg = cartToGPS(latg,longg)
+    phone = phone[1:]
+    print(latg)
+    print(longg)
+    return rssiA, rssiB, rssiC, dtn, phone, latg, longg, latAct, longAct
+
 def rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI):
     distA = list()
     distB = list()
@@ -333,40 +365,6 @@ def rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI):
 
     return distA,distB,distC
 
-def rotateGraph(xg, yg, xAct, yAct):
-    def getBcoor(z):
-        x = z[0]
-        y = z[1]
-
-        F = np.empty((2))
-        F[0] = (x**2) + (y**2) - (Rab**2)
-        F[1] = ((x-xg[2])**2) + (y**2) - (Rbc**2)
-        return F
-    def getNcoor(z):
-        x = z[0]
-        y = z[1]
-
-        F = np.empty((2))
-        F[0] = (x**2) + (y**2) - (Ran**2)
-        F[1] = ((x-xg[2])**2) + (y**2) - (Rnc**2)
-        return F
-    zGuess = np.array([1,1])
-    if yg[2] != 0:
-        notFlat = 1
-        xg[2] = -np.sqrt((xg[2]**2)+(yg[2]**2))
-        yg[2] = 0
-        
-        z = fsolve(getBcoor,zGuess)
-        xg[1] = z[0]
-        yg[1] = -z[1]
-        z = fsolve(getNcoor,zGuess)
-        xAct = z[0]
-        yAct = z[1]
-    else:
-        notFlat = 0
-
-    return xg, yg, xAct, yAct, notFlat
-
 def trilaterate(distanceAf,distanceBf,distanceCf,xg,yg):
     A = -2*xg[0]+2*xg[1]
     B = -2*yg[0]+2*yg[1]
@@ -378,6 +376,45 @@ def trilaterate(distanceAf,distanceBf,distanceCf,xg,yg):
     y = (C*D-A*F)/(B*D-A*E)
 
     return x,y
+
+def drawCircle(xg,yg,rA,rB,rC,points):
+    r = [rA,rB,rC]
+    x = [[],[],[]]
+    y = [[],[],[]]
+    pi = 3.14
+    for i in range(3):
+        for j in range(points):
+            x[i].append(r[i]*cos(2*pi*j/points)+xg[i])
+            y[i].append(r[i]*sin(2*pi*j/points)+yg[i])
+    return x,y
+
+def trilaterateCircle(xCirc,yCirc,points):
+    deltaDist = [1000,1000,1000]
+    dist = [0,0,0]
+    x = [0,0,0,0,0,0]
+    y = [0,0,0,0,0,0]
+    for i in range(3):
+        for j in range(points):
+            for k in range(points):
+                if i <= 1:
+                    dist[i] = sqrt(((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2))
+                    if dist[i] < deltaDist[i]:
+                        deltaDist[i] = dist[i]
+                        x[i] = xCirc[i][j]
+                        x[i+3] = xCirc[i+1][k]
+                        y[i] = yCirc[i][j]
+                        y[i+3] = yCirc[i+1][k]
+                else:
+                    dist[i] = sqrt(((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2))
+                    if dist[i] < deltaDist[i]:
+                        deltaDist[i] = dist[i]
+                        x[i] = xCirc[i][j]
+                        x[i+3] = xCirc[0][k]
+                        y[i] = yCirc[i][j]
+                        y[i+3] = yCirc[0][k]
+    xTrilat = sum(x)/6
+    yTrilat = sum(y)/6
+    return xTrilat,yTrilat
 
 def tolFilter(x,y,errorTolerance):
     i = 0
@@ -515,11 +552,13 @@ def dbscan(epsilon, clusterSamples, data, fig):
 # Listen to COM port and check for errors
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
-rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
+# rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
+# Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-10-30", "14:46:14", "09976800632")
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -554,9 +593,22 @@ CfAve = sum(distanceCf)/len(distanceCf)
 # xg, yg, xAct, yAct, notFlat = rotateGraph(xg, yg, xAct, yAct)
 
 # Trilaterate Data
-print("Trilaterating Data...\n")
-x,y = trilaterate(distanceAf,distanceBf,distanceCf,xg,yg)
-xAve,yAve = trilaterate(AfAve,BfAve,CfAve,xg,yg)
+print("Trilaterating Data...")
+# x,y = trilaterate(distanceAf,distanceBf,distanceCf,xg,yg)
+# xAve,yAve = trilaterate(AfAve,BfAve,CfAve,xg,yg)
+x = list()
+y = list()
+for i in range(len(distanceAf)):
+    distA = distanceAf[i]
+    distB = distanceBf[i]
+    distC = distanceCf[i]
+    xCirc, yCirc = drawCircle(xg,yg,distA,distB,distC,points)
+    xTrilat,yTrilat = trilaterateCircle(xCirc,yCirc,points)
+    x.append(xTrilat)
+    y.append(yTrilat)
+xCirc, yCirc = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
+xAve,yAve = trilaterateCircle(xCirc,yCirc,points)
+print("Done Trilaterating!\n")
 
 # Tolerance Filter
 xFilt,yFilt = tolFilter(x,y,errorTolerance)
@@ -577,9 +629,9 @@ yFiltAve = np.mean(yFilt)
 # comp_distanceBf = distanceFormula(xAct, yAct, xg[1], yg[1])
 # comp_distanceCf = distanceFormula(xAct, yAct, xg[2], yg[2])
 # Use haversine formula
-comp_distanceAf = haversine(latAct, longAct, latg[0], longg[0])
-comp_distanceBf = haversine(latAct, longAct, latg[1], longg[1])
-comp_distanceCf = haversine(latAct, longAct, latg[2], longg[2])
+comp_distanceAf = haversine(latAct[0], longAct[0], latg[0], longg[0])
+comp_distanceBf = haversine(latAct[0], longAct[0], latg[1], longg[1])
+comp_distanceCf = haversine(latAct[0], longAct[0], latg[2], longg[2])
 
 # Plot the data frequency of the gateways
 fig = 1
@@ -931,3 +983,5 @@ firebaseUpload(LoraRescueStorage,
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn + ' 0' + phoneA + ' DBSCAN.jpg')
+
+print("Done!")

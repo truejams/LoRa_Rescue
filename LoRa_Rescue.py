@@ -851,6 +851,17 @@ with open(save_destination+'Basic.csv', mode='a') as blogs:
     blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
     blogswrite.writerow([''])
     blogswrite.writerow([''])
+
+with open(save_destination+'DistanceConstants.csv', mode='a') as blogs:
+    blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
+    blogswrite.writerow(['Time',dtn])
+    blogswrite.writerow(['Phone#','0'+phoneA])
+    blogswrite.writerow(['n',n])
+    blogswrite.writerow(['dro',dro])
+    blogswrite.writerow(['RO RSSI',roRSSI])
+    blogswrite.writerow(['Circumference Points',points])
+    blogswrite.writerow([''])
+    blogswrite.writerow([''])
     
 with open(save_destination+'Actual.csv', mode='a') as alogs:
     alogswrite = csv.writer(alogs, dialect='excel', lineterminator='\n')
@@ -929,6 +940,10 @@ dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
 dataDistances = {"Distance to GNode A":list(distanceAf),
         "Distance to GNode B":list(distanceBf),
         "Distance to GNode C":list(distanceCf)}
+dataDistanceCalc = {"n":n,
+        "dro":dro,
+        "roRSSI":roRSSI,
+        "Circumference Points":points}
 
 clusterCenterX = list()
 clusterCenterY = list()
@@ -950,6 +965,7 @@ dateAndTime = dtn.split()
 dateNow = dateAndTime[0]
 timeNow = dateAndTime[1].replace("-",":")
 db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
 db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
 db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
 db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)

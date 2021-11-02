@@ -26,6 +26,9 @@ import json
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
 # browser_driver = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\chromedriver.exe"
 # Ianny's Directory
+# save_destination = "C:\\LoRa_Rescue\\"
+# browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
+# Greg's Directory
 save_destination = "C:\\LoRa_Rescue\\"
 browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
 
@@ -56,7 +59,7 @@ endrow = 58
 
 # RSSI to Distance and Trilateration calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
-n = 2.8
+n = 3.1
 dro = 1.5
 roRSSI = -32
 points = 100
@@ -558,7 +561,7 @@ def dbscan(epsilon, clusterSamples, data, fig):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-10-30", "14:46:14", "09976800632")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importDatabase("2021-10-30", "14:08:02", "09976500603")
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)

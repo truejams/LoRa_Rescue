@@ -10,7 +10,6 @@ from pyproj import CRS, Transformer
 import pandas as pd
 import seaborn as sns
 import folium
-from selenium import webdriver
 import serial
 import time
 from datetime import datetime as dt
@@ -24,13 +23,10 @@ import json
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
-# browser_driver = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\chromedriver.exe"
 # Ianny's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
-# browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\"
-browser_driver = "C:\\LoRa_Rescue\\chromedriver.exe"
+# save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -57,19 +53,19 @@ LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
 startrow = 1
 endrow = 58
 
-# RSSI to Distance and Trilateration calculation constants
+# RSSI to Distance calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
 n = 2.8
 dro = 1.5
 roRSSI = -32
-points = 100
+
 
 # Trilateration calculation constants
 # GNode GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
-latg = np.array([14.665092310334686, 14.665754710334026, 14.664694310334996])
-longg = np.array([120.97203469024431, 120.97128459024518, 120.97234819024389])
+latg = np.array([14.6648848,14.6648496,14.6648452])
+longg = np.array([120.9718980,120.9718835,120.9718860])
 
 # GNode Cartesian Coordinates
 # Format: A B C
@@ -78,12 +74,16 @@ yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
 ################## CHANGE THIS ACCORDINGLY ##################  
-latAct = np.array([14.66545241])
-longAct = np.array([120.97169829])
+latAct = np.array([14.6648547])
+longAct = np.array([120.9718816])
 
 # Actual Mobile Node Cartesian Coordinates
 xAct = np.array([0]) #Target x-coordinate
 yAct = np.array([0]) #Target y-coordinate
+
+################## CHANGE THIS ACCORDINGLY ##################
+# Circle Trilateration Points
+points = 100
 
 # Tolerance filter error margin
 ################## CHANGE THIS ACCORDINGLY ##################  
@@ -266,7 +266,7 @@ def serialListener(port,baud):
     rssiA = df.iloc[0, 1]
     rssiB = df.iloc[1, 1]
     rssiC = df.iloc[2, 1]
-    dtn = dateNow + " " + timeNow[0:8]
+    dtn = dateNow + " " + timeNow
     dtn = dtn.replace(':','-')
     with open(save_destination+'rawData.csv', mode='a') as logs:
         logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
@@ -340,8 +340,7 @@ def importDatabase(date, time, phone):
     latAct = np.array([float(mobileLatLong[0])])
     longAct = np.array([float(mobileLatLong[1])])
     latAct,longAct = cartToGPS(latAct,longAct)
-    print(latAct)
-    print(longAct)
+
     databaseEntries = db.child(date).child(phoneTime).child("Basic Raw Information").get()
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     gnodeA = df.iloc[3, 1].split()
@@ -368,18 +367,6 @@ def rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI):
         distC.append(pow(10,((roRSSI-int(rssi[2][i]))/(10*n)))*dro)
 
     return distA,distB,distC
-
-def trilaterate(distanceAf,distanceBf,distanceCf,xg,yg):
-    A = -2*xg[0]+2*xg[1]
-    B = -2*yg[0]+2*yg[1]
-    C = distanceAf**2-distanceBf**2-xg[0]**2+xg[1]**2-yg[0]**2+yg[1]**2
-    D = -2*xg[1]+2*xg[2]
-    E = -2*yg[1]+2*yg[2]
-    F = distanceBf**2-distanceCf**2-xg[1]**2+xg[2]**2-yg[1]**2+yg[2]**2
-    x = (C*E-F*B)/(E*A-B*D)
-    y = (C*D-A*F)/(B*D-A*E)
-
-    return x,y
 
 def drawCircle(xg,yg,rA,rB,rC,points):
     intersect = [[0,[0,0]],[0,[0,0]],[0,[0,0]]]
@@ -614,7 +601,7 @@ def dbscan(epsilon, clusterSamples, data, fig):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importDatabase("2021-10-30", "14:37:36", "09976800622")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-10-30", "14:46:14", "09976800632")
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -737,39 +724,56 @@ plt.close()
 
 # Plot the behavior of the distance
 plt.figure(fig)
-plt.plot(distanceAf, label='Gateway A Distances')
-plt.plot(distanceBf, label='Gateway B Distances')
-plt.plot(distanceCf, label='Gateway C Distances')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, label='Actual GNode A Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, label='Actual GNode B Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, label='Actual GNode C Distance')
+plt.plot([], [], ' ', label='Parameters:')
+plt.plot([], [], ' ', label='n = '+str(n))
+plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.plot([], [], ' ', label=' ')
+plt.plot(distanceAf, 'r', label='Gateway A Distances')
+plt.plot(distanceBf, 'g', label='Gateway B Distances')
+plt.plot(distanceCf, 'b', label='Gateway C Distances')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual GNode B Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual GNode C Distance')
 plt.title(dtn + ' 0' + phoneA  + ' Distance Behavior')
 plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bbox_inches='tight')
 fig += 1
 # Plot the data for trilateration w/o the filters
 plt.figure(fig)
+plt.plot([], [], ' ', label='Parameters:')
+plt.plot([], [], ' ', label='n = '+str(n))
+plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.plot([], [], ' ', label='Circle Points = '+str(points))
+plt.plot([], [], ' ', label=' ')
 plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xAve, yAve, label='Ave Node Locations', cmap='brg', s=20)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
 plt.title(dtn + ' 0' + phoneA  + ' RawTrilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
-plt.legend()
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg')
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
 fig += 1
 # Plot the data for trilateration w/ the filters
 plt.figure(fig)
+plt.plot([], [], ' ', label='Parameters:')
+plt.plot([], [], ' ', label='n = '+str(n))
+plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.plot([], [], ' ', label='Circle Points = '+str(points))
+plt.plot([], [], ' ', label=' ')
 plt.scatter(xFilt, yFilt, label='Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xFiltAve, yFiltAve, label='Ave Node Locations', cmap='brg', s=20)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
 plt.title(dtn + ' 0' + phoneA  + ' FiltTrilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
-plt.legend()
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg')
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg', bbox_inches='tight')
 fig += 1
 
 # K-Means
@@ -870,15 +874,6 @@ folium.Circle(
 # Save HTML Map File
 m.save(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.html')
 
-# Screenshot HTML Map File to get JPG File
-options = webdriver.ChromeOptions()
-options.add_experimental_option('excludeSwitches', ['enable-logging'])
-driver = webdriver.Chrome(browser_driver, options=options)
-driver.get(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.html')
-time.sleep(5) # Delay to accomodate browser snapshotting, change accordingly
-driver.save_screenshot(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.png')
-driver.close()
-
 # DBSCAN
 # Create numpy array 'dataDB' for DBSCAN containing (x,y) coordinates
 dataDB = np.array([[x[0],y[0]]])
@@ -907,7 +902,7 @@ with open(save_destination+'Basic.csv', mode='a') as blogs:
     blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
     blogswrite.writerow([''])
     blogswrite.writerow([''])
-
+    
 with open(save_destination+'DistanceConstants.csv', mode='a') as blogs:
     blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
     blogswrite.writerow(['Time',dtn])
@@ -1030,7 +1025,7 @@ db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmean
 # Firebase Storage
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceFrequencyDistribution.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
@@ -1046,9 +1041,6 @@ firebaseUpload(LoraRescueStorage,
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-Means.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' FoliumMapping.png',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/FoliumMapping.png')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FoliumMapping.html',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FoliumMapping.html')
@@ -1057,3 +1049,5 @@ firebaseUpload(LoraRescueStorage,
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
     
 print("Done!")
+
+

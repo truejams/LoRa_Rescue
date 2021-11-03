@@ -1,5 +1,14 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v0.5.7 [Yani]
+- Removed selenium library
+- Removed code for generating and uploading FoliumMapping.png
+  - Removed browser_driver directory
+  - Removed FoliumMapping.html browser snapshotting
+  - Removed firebaseUpload() for FoliumMapping.png
+- Changed line colors and styles in distance behavior graph for easier visualization
+- Included initial parameters in distance behavior, raw trilateration, and filt trilateration graphs
+
 Revised build v0.5.6 [Greg]
 - Added Intersection Checker for Trilateration
 

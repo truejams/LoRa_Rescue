@@ -340,7 +340,8 @@ def importDatabase(date, time, phone):
     latAct = np.array([float(mobileLatLong[0])])
     longAct = np.array([float(mobileLatLong[1])])
     latAct,longAct = cartToGPS(latAct,longAct)
-
+    print(latAct)
+    print(longAct)
     databaseEntries = db.child(date).child(phoneTime).child("Basic Raw Information").get()
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     gnodeA = df.iloc[3, 1].split()
@@ -390,14 +391,14 @@ def drawCircle(xg,yg,rA,rB,rC,points):
         for j in range(points):
             x[i].append(r[i]*cos(2*pi*j/points)+xg[i])
             y[i].append(r[i]*sin(2*pi*j/points)+yg[i])
-    if (distA - distB)**2 <= (xg[0] - xg[1])**2 + (yg[0] - yg[1])**2 and (xg[0] - xg[1])**2 + (yg[0] - yg[1])**2 <= (distA + distB)**2:
-        xint, yint = get_intersections(xg[0], yg[0], distA, xg[1], yg[1], distB)
+    if (rA - rB)**2 <= (xg[0] - xg[1])**2 + (yg[0] - yg[1])**2 and (xg[0] - xg[1])**2 + (yg[0] - yg[1])**2 <= (rA + rB)**2:
+        xint, yint = get_intersections(xg[0], yg[0], rA, xg[1], yg[1], rB)
         intersect[0] = [1,[xint,yint]]
-    if (distB - distC)**2 <= (xg[1] - xg[2])**2 + (yg[1] - yg[2])**2 and (xg[1] - xg[2])**2 + (yg[1] - yg[2])**2 <= (distB + distC)**2:
-        xint, yint = get_intersections(xg[1], yg[1], distB, xg[2], yg[2], distC)
+    if (rB - rC)**2 <= (xg[1] - xg[2])**2 + (yg[1] - yg[2])**2 and (xg[1] - xg[2])**2 + (yg[1] - yg[2])**2 <= (rB + rC)**2:
+        xint, yint = get_intersections(xg[1], yg[1], rB, xg[2], yg[2], rC)
         intersect[1] = [1,[xint,yint]]
-    if (distA - distC)**2 <= (xg[0] - xg[2])**2 + (yg[0] - yg[2])**2 and (xg[0] - xg[2])**2 + (yg[0] - yg[2])**2 <= (distA + distC)**2:
-        xint, yint = get_intersections(xg[0], yg[0], distA, xg[2], yg[2], distC)
+    if (rA - rC)**2 <= (xg[0] - xg[2])**2 + (yg[0] - yg[2])**2 and (xg[0] - xg[2])**2 + (yg[0] - yg[2])**2 <= (rA + rC)**2:
+        xint, yint = get_intersections(xg[0], yg[0], rA, xg[2], yg[2], rC)
         intersect[2] = [1,[xint,yint]]
     return x,y,intersect
 
@@ -429,7 +430,7 @@ def get_intersections(x0, y0, r0, x1, y1, r1):
         return x,y
 
 def trilaterateCircle(xCirc,yCirc,intersect,points):
-    deltaDist = [1000000000,1000000000,1000000000]
+    deltaDist = [10000,10000,10000]
     dist = [0,0,0]
     x = [0,0,0]
     y = [0,0,0]
@@ -613,7 +614,7 @@ def dbscan(epsilon, clusterSamples, data, fig):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importDatabase("2021-10-30", "14:46:14", "09976800632")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importDatabase("2021-10-30", "14:37:36", "09976800622")
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -661,8 +662,8 @@ for i in range(len(distanceAf)):
     xTrilat,yTrilat = trilaterateCircle(xCirc,yCirc,intersect,points)
     x.append(xTrilat)
     y.append(yTrilat)
-xCirc, yCirc, intersect = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
-xAve,yAve = trilaterateCircle(xCirc,yCirc,intersect,points)
+xCircAve, yCircAve, inter = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
+xAve,yAve = trilaterateCircle(xCircAve,yCircAve,inter,points)
 print("Done Trilaterating!\n")
 
 # Tolerance Filter

@@ -59,7 +59,7 @@ endrow = 58
 
 # RSSI to Distance and Trilateration calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
-n = 3.1
+n = 2.8
 dro = 1.5
 roRSSI = -32
 points = 100
@@ -381,6 +381,7 @@ def trilaterate(distanceAf,distanceBf,distanceCf,xg,yg):
     return x,y
 
 def drawCircle(xg,yg,rA,rB,rC,points):
+    intersect = [[0,[0,0]],[0,[0,0]],[0,[0,0]]]
     r = [rA,rB,rC]
     x = [[],[],[]]
     y = [[],[],[]]
@@ -389,34 +390,85 @@ def drawCircle(xg,yg,rA,rB,rC,points):
         for j in range(points):
             x[i].append(r[i]*cos(2*pi*j/points)+xg[i])
             y[i].append(r[i]*sin(2*pi*j/points)+yg[i])
-    return x,y
+    if (distA - distB)**2 <= (xg[0] - xg[1])**2 + (yg[0] - yg[1])**2 and (xg[0] - xg[1])**2 + (yg[0] - yg[1])**2 <= (distA + distB)**2:
+        xint, yint = get_intersections(xg[0], yg[0], distA, xg[1], yg[1], distB)
+        intersect[0] = [1,[xint,yint]]
+    if (distB - distC)**2 <= (xg[1] - xg[2])**2 + (yg[1] - yg[2])**2 and (xg[1] - xg[2])**2 + (yg[1] - yg[2])**2 <= (distB + distC)**2:
+        xint, yint = get_intersections(xg[1], yg[1], distB, xg[2], yg[2], distC)
+        intersect[1] = [1,[xint,yint]]
+    if (distA - distC)**2 <= (xg[0] - xg[2])**2 + (yg[0] - yg[2])**2 and (xg[0] - xg[2])**2 + (yg[0] - yg[2])**2 <= (distA + distC)**2:
+        xint, yint = get_intersections(xg[0], yg[0], distA, xg[2], yg[2], distC)
+        intersect[2] = [1,[xint,yint]]
+    return x,y,intersect
 
-def trilaterateCircle(xCirc,yCirc,points):
-    deltaDist = [1000,1000,1000]
+def get_intersections(x0, y0, r0, x1, y1, r1):
+    # circle 1: (x0, y0), radius r0
+    # circle 2: (x1, y1), radius r1
+
+    d=sqrt((x1-x0)**2 + (y1-y0)**2)
+    # non intersecting
+    if d > r0 + r1 :
+        return None
+    # One circle within other
+    if d < abs(r0-r1):
+        return None
+    # coincident circles
+    if d == 0 and r0 == r1:
+        return None
+    else:
+        a=(r0**2-r1**2+d**2)/(2*d)
+        h=sqrt(r0**2-a**2)
+        x2=x0+a*(x1-x0)/d   
+        y2=y0+a*(y1-y0)/d   
+        x3=x2+h*(y1-y0)/d     
+        y3=y2-h*(x1-x0)/d 
+        x4=x2-h*(y1-y0)/d
+        y4=y2+h*(x1-x0)/d
+        x = [x3,x4]
+        y = [y3,y4]
+        return x,y
+
+def trilaterateCircle(xCirc,yCirc,intersect,points):
+    deltaDist = [1000000000,1000000000,1000000000]
     dist = [0,0,0]
-    x = [0,0,0,0,0,0]
-    y = [0,0,0,0,0,0]
+    x = [0,0,0]
+    y = [0,0,0]
     for i in range(3):
         for j in range(points):
             for k in range(points):
                 if i <= 1:
-                    dist[i] = sqrt(((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2))
+                    dist[i] = ((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2)
                     if dist[i] < deltaDist[i]:
                         deltaDist[i] = dist[i]
-                        x[i] = xCirc[i][j]
-                        x[i+3] = xCirc[i+1][k]
-                        y[i] = yCirc[i][j]
-                        y[i+3] = yCirc[i+1][k]
-                else:
-                    dist[i] = sqrt(((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2))
+                        x[i] = (xCirc[i][j]+xCirc[i+1][k])/2
+                        y[i] = (yCirc[i][j]+yCirc[i+1][k])/2
+                elif i == 2:
+                    dist[i] = ((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2)
                     if dist[i] < deltaDist[i]:
                         deltaDist[i] = dist[i]
-                        x[i] = xCirc[i][j]
-                        x[i+3] = xCirc[0][k]
-                        y[i] = yCirc[i][j]
-                        y[i+3] = yCirc[0][k]
-    xTrilat = sum(x)/6
-    yTrilat = sum(y)/6
+                        x[i] = (xCirc[i][j]+xCirc[0][k])/2
+                        y[i] = (yCirc[i][j]+yCirc[0][k])/2
+    for i in range(3):
+        if intersect[i][0] == 1 and i < 2:
+            dist1 = sqrt(((intersect[i][1][0][0]-x[2])**2)+((intersect[i][1][1][0]-y[2])**2))
+            dist2 = sqrt(((intersect[i][1][0][1]-x[2])**2)+((intersect[i][1][1][1]-y[2])**2))
+            if dist1 < dist2:
+                x[i] = intersect[i][1][0][0]
+                y[i] = intersect[i][1][1][0]
+            else:
+                x[i] = intersect[i][1][0][1]
+                y[i] = intersect[i][1][1][1]
+        elif intersect[i][0] == 1 and i == 2:
+            dist1 = sqrt(((intersect[i][1][0][0]-x[0])**2)+((intersect[i][1][1][0]-y[0])**2))
+            dist2 = sqrt(((intersect[i][1][0][1]-x[0])**2)+((intersect[i][1][1][1]-y[0])**2))
+            if dist1 < dist2:
+                x[i] = intersect[i][1][0][0]
+                y[i] = intersect[i][1][1][0]
+            else:
+                x[i] = intersect[i][1][0][1]
+                y[i] = intersect[i][1][1][1] 
+    xTrilat = sum(x)/3
+    yTrilat = sum(y)/3
     return xTrilat,yTrilat
 
 def tolFilter(x,y,errorTolerance):
@@ -561,7 +613,7 @@ def dbscan(epsilon, clusterSamples, data, fig):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importDatabase("2021-10-30", "14:08:02", "09976500603")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importDatabase("2021-10-30", "14:46:14", "09976800632")
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -605,12 +657,12 @@ for i in range(len(distanceAf)):
     distA = distanceAf[i]
     distB = distanceBf[i]
     distC = distanceCf[i]
-    xCirc, yCirc = drawCircle(xg,yg,distA,distB,distC,points)
-    xTrilat,yTrilat = trilaterateCircle(xCirc,yCirc,points)
+    xCirc, yCirc, intersect = drawCircle(xg,yg,distA,distB,distC,points)
+    xTrilat,yTrilat = trilaterateCircle(xCirc,yCirc,intersect,points)
     x.append(xTrilat)
     y.append(yTrilat)
-xCirc, yCirc = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
-xAve,yAve = trilaterateCircle(xCirc,yCirc,points)
+xCirc, yCirc, intersect = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
+xAve,yAve = trilaterateCircle(xCirc,yCirc,intersect,points)
 print("Done Trilaterating!\n")
 
 # Tolerance Filter

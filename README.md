@@ -1,5 +1,8 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v0.5.6 [Greg]
+- Added Intersection Checker for Trilateration
+
 Revised build v0.5.5 [Greg]
 - Revised Trilateration Calculation
 - Added importDatabase function to import from firebase database

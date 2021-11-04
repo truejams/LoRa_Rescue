@@ -1,6 +1,3 @@
-# LoRa_Rescue
-Thesis Python Code
-
 <html>
-  <head> TrueJamols </head>
+  <head> Tkinter Branch </head>
 </html>

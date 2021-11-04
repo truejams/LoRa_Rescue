@@ -93,7 +93,7 @@ errorTolerance = 50
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Will be removed when an optimization function is made
 epsilon = 50
-clusterSamples = 3
+minPts = 3
 
 # Function Declarations
 def listenForData(port,baud):
@@ -567,8 +567,8 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Upload files to Firebase Storage
     storage.child(cloudDir).put(localDir)
 
-def dbscan(epsilon, clusterSamples, data, fig):
-    db = DBSCAN(eps=epsilon, min_samples=clusterSamples).fit(data)
+def dbscan(epsilon, minPts, data, fig):
+    db = DBSCAN(eps=epsilon, min_samples=minPts).fit(data)
     dbData = data[db.labels_>-1] 
     dbLabels = db.labels_[db.labels_>-1]
     dbGraph = plt.figure(fig)
@@ -576,6 +576,14 @@ def dbscan(epsilon, clusterSamples, data, fig):
     plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
     plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
     plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='green', s=30)
+    plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+    plt.scatter([], [], marker=' ', label='Parameters: ')
+    plt.scatter([], [], marker=' ', label='n = '+str(n))
+    plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
+    plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
+    plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
+    plt.scatter([], [], marker=' ', label='ε  = '+str(epsilon))
+    plt.scatter([], [], marker=' ', label='MinPts  = '+str(minPts))
     plt.grid(linewidth=1, color="w")
     ax = plt.gca()
     ax.set_facecolor('gainsboro')
@@ -583,8 +591,8 @@ def dbscan(epsilon, clusterSamples, data, fig):
     plt.xlabel('x-axis [Meters]')
     plt.ylabel('y-axis [Meters]')
     plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
-    plt.legend()
-    plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg') #Change Directory Accordingly
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+    plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
     fig += 1
 
     return fig
@@ -689,7 +697,7 @@ distSeriesC = pd.Series(distanceCf).value_counts().reset_index().sort_values('in
 distSeriesC.columns = ['Distance','Frequency']
 distSeriesC['Distance'] = distSeriesC['Distance'].round()
 figur, axes = plt.subplots(1,3, figsize=(18, 5))
-axes[0].set_title(dtn + ' 0' + phoneA  + ' A FD')
+axes[0].set_title(dtn + ' 0' + phoneA  + ' GNode A FD')
 plots = sns.barplot(ax=axes[0],x="Distance", y="Frequency", data=distSeriesA)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
@@ -698,7 +706,7 @@ for bar in plots.patches:
                     size=9, xytext=(0, 8),
                     textcoords='offset points')
 
-axes[1].set_title(dtn + ' 0' + phoneA  + ' B FD')
+axes[1].set_title(dtn + ' 0' + phoneA  + ' GNode B FD')
 plots = sns.barplot(ax=axes[1],x="Distance", y="Frequency", data=distSeriesB)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
@@ -707,7 +715,7 @@ for bar in plots.patches:
                     size=9, xytext=(0, 8),
                     textcoords='offset points')
 
-axes[2].set_title(dtn + ' 0' + phoneA  + ' C FD')
+axes[2].set_title(dtn + ' 0' + phoneA  + ' GNode C FD')
 plots = sns.barplot(ax=axes[2],x="Distance", y="Frequency", data=distSeriesC)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
@@ -724,52 +732,62 @@ plt.close()
 
 # Plot the behavior of the distance
 plt.figure(fig)
+plt.plot(distanceAf, 'r', label='GNode A Distances')
+plt.plot(distanceBf, 'g', label='GNode B Distances')
+plt.plot(distanceCf, 'b', label='GNode C Distances')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual GNode B Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual GNode C Distance')
+plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='n = '+str(n))
 plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
 plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
-plt.plot([], [], ' ', label=' ')
-plt.plot(distanceAf, 'r', label='Gateway A Distances')
-plt.plot(distanceBf, 'g', label='Gateway B Distances')
-plt.plot(distanceCf, 'b', label='Gateway C Distances')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual GNode B Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual GNode C Distance')
 plt.title(dtn + ' 0' + phoneA  + ' Distance Behavior')
 plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bbox_inches='tight')
 fig += 1
+
 # Plot the data for trilateration w/o the filters
 plt.figure(fig)
-plt.plot([], [], ' ', label='Parameters:')
-plt.plot([], [], ' ', label='n = '+str(n))
-plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
-plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
-plt.plot([], [], ' ', label='Circle Points = '+str(points))
-plt.plot([], [], ' ', label=' ')
 plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xAve, yAve, label='Ave Node Locations', cmap='brg', s=20)
+plt.scatter(xAve, yAve, label='Average Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
-plt.title(dtn + ' 0' + phoneA  + ' RawTrilateration', y=1.05)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters:')
+plt.scatter([], [], marker=' ', label='n = '+str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
+plt.grid(linewidth=1, color="w")
+ax = plt.gca()
+ax.set_facecolor('gainsboro')
+ax.set_axisbelow(True)
+plt.title(dtn + ' 0' + phoneA  + ' Raw Trilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
 fig += 1
+
 # Plot the data for trilateration w/ the filters
 plt.figure(fig)
-plt.plot([], [], ' ', label='Parameters:')
-plt.plot([], [], ' ', label='n = '+str(n))
-plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
-plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
-plt.plot([], [], ' ', label='Circle Points = '+str(points))
-plt.plot([], [], ' ', label=' ')
 plt.scatter(xFilt, yFilt, label='Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xFiltAve, yFiltAve, label='Ave Node Locations', cmap='brg', s=20)
+plt.scatter(xFiltAve, yFiltAve, label='Average Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
-plt.title(dtn + ' 0' + phoneA  + ' FiltTrilateration', y=1.05)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters:')
+plt.scatter([], [], marker=' ', label='n = '+str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
+plt.grid(linewidth=1, color="w")
+ax = plt.gca()
+ax.set_facecolor('gainsboro')
+ax.set_axisbelow(True)
+plt.title(dtn + ' 0' + phoneA  + ' Filtered Trilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
@@ -796,10 +814,13 @@ print('Optimal Number of Clusters is', elbow.knee)
 # Elbow Plot
 plt.figure(fig)
 plt.plot(range(1,len(data)), inertia)
+plt.plot([elbow.knee], inertia[elbow.knee-1], 'ro', label='Optimal Clusters: ' + str(elbow.knee))
+plt.plot([], [], ' ', label='@ SoSD: ' + str("{:.4f}".format(inertia[elbow.knee-1])))
 plt.xlabel('No. of Clusters')
 plt.ylabel('Sum of Squared Distances')
-plt.title(dtn + ' 0' + phoneA  + ' Elbow Graph')
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' Elbow.jpg') #Change Directory Accordingly
+plt.title(dtn + ' 0' + phoneA  + ' K-Means Elbow Graph')
+plt.legend() 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-MeansElbow.jpg') #Change Directory Accordingly
 fig += 1
 
 # K-means Plot
@@ -809,6 +830,13 @@ plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(r
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='green', s=30)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters: ')
+plt.scatter([], [], marker=' ', label='n = '+str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
+plt.scatter([], [], marker=' ', label='No. of Clusters  = '+str(elbow.knee))
 plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
@@ -816,8 +844,8 @@ ax.set_axisbelow(True)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.title(dtn + ' 0' + phoneA  + ' K-Means', y=1.05)
-plt.legend()
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-Means.jpg') #Change Directory Accordingly
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-Means.jpg', bbox_inches='tight') #Change Directory Accordingly
 fig += 1
 
 # K-means Plot Folium Mapping
@@ -879,8 +907,7 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.html')
 dataDB = np.array([[x[0],y[0]]])
 for i in range(1,len(xFilt)):
     dataDB = np.append(dataDB,[[x[i],y[i]]], axis=0)
-
-fig = dbscan(epsilon, clusterSamples, dataDB, fig)
+fig = dbscan(epsilon, minPts, dataDB, fig)
 
 # Error Computations
 # Computed Position vs. Actual Position
@@ -1036,8 +1063,8 @@ firebaseUpload(LoraRescueStorage,
     dtn + ' 0' + phoneA + ' FiltTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FiltTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' Elbow.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/Elbow.jpg')
+    dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-Means.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')

@@ -6,8 +6,10 @@ Revised build v0.5.7 [Yani]
   - Removed browser_driver directory
   - Removed FoliumMapping.html browser snapshotting
   - Removed firebaseUpload() for FoliumMapping.png
-- Changed line colors and styles in distance behavior graph for easier visualization
-- Included initial parameters in distance behavior, raw trilateration, and filt trilateration graphs
+- Renamed Elbow.jpg to K-MeansElbow.jpg
+- Changed line colors and markers in distance behavior graph
+- Included initial parameters in the legend of the following graphs:
+  - Distance Behavior, Raw Trilateration, Filtered Trilateration, K-Means Elbow, K-Means, and DBSCAN
 
 Revised build v0.5.6 [Greg]
 - Added Intersection Checker for Trilateration

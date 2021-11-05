@@ -352,8 +352,8 @@ def importDatabase(date, time, phone):
     longg = np.array([float(gnodeA[1]),float(gnodeB[1]),float(gnodeC[1])])
     latg,longg = cartToGPS(latg,longg)
     phone = phone[1:]
-    print(latg)
-    print(longg)
+    print('GNode Latitudes: ' + str(latg))
+    print('GNode Longitudes: '+ str(longg))
     return rssiA, rssiB, rssiC, dtn, phone, latg, longg, latAct, longAct
 
 def rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI):
@@ -688,17 +688,17 @@ comp_distanceCf = haversine(latAct[0], longAct[0], latg[2], longg[2])
 fig = 1
 plt.figure(fig)
 distSeriesA = pd.Series(distanceAf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
-distSeriesA.columns = ['Distance','Frequency']
-distSeriesA['Distance'] = distSeriesA['Distance'].round()
+distSeriesA.columns = ['Distance [Meters]','Frequency']
+distSeriesA['Distance [Meters]'] = distSeriesA['Distance [Meters]'].round()
 distSeriesB = pd.Series(distanceBf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
-distSeriesB.columns = ['Distance','Frequency']
-distSeriesB['Distance'] = distSeriesB['Distance'].round()
+distSeriesB.columns = ['Distance [Meters]','Frequency']
+distSeriesB['Distance [Meters]'] = distSeriesB['Distance [Meters]'].round()
 distSeriesC = pd.Series(distanceCf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
-distSeriesC.columns = ['Distance','Frequency']
-distSeriesC['Distance'] = distSeriesC['Distance'].round()
+distSeriesC.columns = ['Distance [Meters]','Frequency']
+distSeriesC['Distance [Meters]'] = distSeriesC['Distance [Meters]'].round()
 figur, axes = plt.subplots(1,3, figsize=(18, 5))
 axes[0].set_title(dtn + ' 0' + phoneA  + ' GNode A FD')
-plots = sns.barplot(ax=axes[0],x="Distance", y="Frequency", data=distSeriesA)
+plots = sns.barplot(ax=axes[0],x="Distance [Meters]", y="Frequency", data=distSeriesA)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
                     (bar.get_x() + bar.get_width() / 2, 
@@ -707,7 +707,7 @@ for bar in plots.patches:
                     textcoords='offset points')
 
 axes[1].set_title(dtn + ' 0' + phoneA  + ' GNode B FD')
-plots = sns.barplot(ax=axes[1],x="Distance", y="Frequency", data=distSeriesB)
+plots = sns.barplot(ax=axes[1],x="Distance [Meters]", y="Frequency", data=distSeriesB)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
                     (bar.get_x() + bar.get_width() / 2, 
@@ -716,7 +716,7 @@ for bar in plots.patches:
                     textcoords='offset points')
 
 axes[2].set_title(dtn + ' 0' + phoneA  + ' GNode C FD')
-plots = sns.barplot(ax=axes[2],x="Distance", y="Frequency", data=distSeriesC)
+plots = sns.barplot(ax=axes[2],x="Distance [Meters]", y="Frequency", data=distSeriesC)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
                     (bar.get_x() + bar.get_width() / 2, 
@@ -795,6 +795,7 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg', b
 fig += 1
 
 # K-Means
+print('Performing K-Means...')
 # K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
 if len(xFilt)<2:
     print("K-means clustering can't be performed due to lack of sample coordinates")
@@ -810,6 +811,7 @@ data = np.unique(data, axis=0) #Eliminate Duplicates in data
 
 kmeans,inertia,elbow = kmeansOptimize(data)
 print('Optimal Number of Clusters is', elbow.knee)
+print('K-Means Done!\n')
 
 # Elbow Plot
 plt.figure(fig)
@@ -894,7 +896,7 @@ folium.Circle(
     radius=1,
     location=[latAve[0], longAve[0]],
     tooltip='Average Point',
-    popup=str(latAve[0])+','+str(latAve[0]),
+    popup=str(latAve[0])+','+str(longAve[0]),
     color='black',
     fill='True'
 ).add_to(m)
@@ -903,17 +905,20 @@ folium.Circle(
 m.save(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.html')
 
 # DBSCAN
+print('Performing DBSCAN...')
 # Create numpy array 'dataDB' for DBSCAN containing (x,y) coordinates
 dataDB = np.array([[x[0],y[0]]])
 for i in range(1,len(xFilt)):
     dataDB = np.append(dataDB,[[x[i],y[i]]], axis=0)
 fig = dbscan(epsilon, minPts, dataDB, fig)
+print('DBSCAN Done!\n')
 
 # Error Computations
 # Computed Position vs. Actual Position
 compVact, centVave, compVcent = errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
 
 # CSV Writing
+print('Saving to CSV...')
 with open(save_destination+'Basic.csv', mode='a') as blogs:
     blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
     blogswrite.writerow(['Time',dtn])
@@ -1001,6 +1006,7 @@ with open(save_destination+'Distances.csv', mode='a') as dlogs:
         klogswrite.writerow([''])
 
 # Firebase Realtime Database
+print('Uploading to LoRa Rescue Realtime Database...')
 firebase = pyrebase.initialize_app(LoraRescueStorage)
 db = firebase.database()
 dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
@@ -1050,6 +1056,7 @@ db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes"
 db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
 # Firebase Storage
+print('Uploading to LoRa Rescue Storage...\n')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')

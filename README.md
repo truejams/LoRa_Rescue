@@ -1,5 +1,9 @@
 # LoRa_Rescue Build Logs:
 
+Revised build v.0.5.8 [Yani]
+- Added units to the Frequency Distribution Graph
+- Added extra print() for code status
+
 Revised build v0.5.7 [Yani]
 - Removed selenium library
 - Removed code for generating and uploading FoliumMapping.png

@@ -24,9 +24,9 @@ import json
 # Benjamin's Directory
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -735,6 +735,9 @@ plt.figure(fig)
 plt.plot(distanceAf, 'r', label='GNode A Distances')
 plt.plot(distanceBf, 'g', label='GNode B Distances')
 plt.plot(distanceCf, 'b', label='GNode C Distances')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*AfAve, 'r.', label='Average GNode A Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*BfAve, 'g.', label='Average GNode B Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*CfAve, 'b.', label='Average GNode C Distance')
 plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
 plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual GNode B Distance')
 plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual GNode C Distance')
@@ -766,8 +769,8 @@ ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
 plt.title(dtn + ' 0' + phoneA  + ' Raw Trilateration', y=1.05)
-plt.xlabel('x-axis [Meters]')
-plt.ylabel('y-axis [Meters]')
+plt.xlabel('Longitude [Meters]')
+plt.ylabel('Latitude [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
 fig += 1
@@ -788,8 +791,8 @@ ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
 plt.title(dtn + ' 0' + phoneA  + ' Filtered Trilateration', y=1.05)
-plt.xlabel('x-axis [Meters]')
-plt.ylabel('y-axis [Meters]')
+plt.xlabel('Longitude [Meters]')
+plt.ylabel('Latitude [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg', bbox_inches='tight')
 fig += 1
@@ -843,8 +846,8 @@ plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
-plt.xlabel('x-axis [Meters]')
-plt.ylabel('y-axis [Meters]')
+plt.xlabel('Longitude [Meters]')
+plt.ylabel('Latitude [Meters]')
 plt.title(dtn + ' 0' + phoneA  + ' K-Means', y=1.05)
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-Means.jpg', bbox_inches='tight') #Change Directory Accordingly
@@ -916,6 +919,24 @@ print('DBSCAN Done!\n')
 # Error Computations
 # Computed Position vs. Actual Position
 compVact, centVave, compVcent = errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
+compVactAve = sum(compVact)/len(compVact)
+
+# Plot the behavior of the error
+plt.figure(fig)
+plt.plot(compVact, 'r', label='Trilateration Error')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*compVactAve , 'r--', label='Average Error')
+# plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
+plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.plot([], [], ' ', label='Parameters:')
+plt.plot([], [], ' ', label='n = '+str(n))
+plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.title(dtn + ' 0' + phoneA  + ' Error Behavior')
+plt.xlabel('Datapoint')
+plt.ylabel('Distance [Meters]')
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ErrorBehavior.jpg', bbox_inches='tight')
+fig += 1
 
 # CSV Writing
 print('Saving to CSV...')
@@ -954,7 +975,7 @@ with open(save_destination+'Actual.csv', mode='a') as alogs:
     alogswrite.writerow(['Actual Computed Distances from Gnodes'])
     alogswrite.writerow(['A','','B','','C'])
     alogswrite.writerow([comp_distanceAf,'',comp_distanceBf,'',comp_distanceCf])
-    alogswrite.writerow(['Actual Position vs. Raw X and Y Coordinates'])
+    alogswrite.writerow(['Trilateration Error vs Actual Coordinates'])
     for i in range(np.shape(compVact)[0]):
         alogswrite.writerow([compVact[i]])
     alogswrite.writerow([''])
@@ -1018,7 +1039,7 @@ dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0
         "Optimal Number of Clusters":int(elbow.knee)}
 dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
         "Actual Computed Distances from Gnodes (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
-        "Actual Position VS Raw X and Y Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
+        "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
 dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
         "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
 dataDistances = {"Distance to GNode A":list(distanceAf),
@@ -1063,6 +1084,9 @@ firebaseUpload(LoraRescueStorage,
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/ErrorBehavior.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')    

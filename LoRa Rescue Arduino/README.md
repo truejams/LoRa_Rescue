@@ -21,7 +21,6 @@ Build v0.2 10-27-21
 - Possible undocumented changes
 - Changes only apply to Mobile Node, Main Gateway, Gateway B, and Gateway C
 
-
 Build v0.1 07-09-21
 - Original build used in prior testing
 - Updated to send RSSI and not distance

@@ -820,7 +820,7 @@ plt.plot([elbow.knee], inertia[elbow.knee-1], 'ro', label='Optimal Clusters: ' +
 plt.plot([], [], ' ', label='@ SoSD: ' + str("{:.4f}".format(inertia[elbow.knee-1])))
 plt.xlabel('No. of Clusters')
 plt.ylabel('Sum of Squared Distances')
-plt.title(dtn + ' 0' + phoneA  + ' K-Means Elbow Graph')
+plt.title(dtn + ' 0' + phoneA  + ' K-Means Elbow')
 plt.legend() 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-MeansElbow.jpg') #Change Directory Accordingly
 fig += 1

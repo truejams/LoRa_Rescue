@@ -9,6 +9,7 @@
 byte srcAddress = 0x11;      // destination: Gateway broadcast
 char phoneNum[10];
 char phoneNumTemp[10];
+char hopData[15];
 int i=0;
 int j=0;
 int set=0;
@@ -16,8 +17,8 @@ int set=0;
 // del after test
 char isPhone;
 #define reset 1
-byte subNode = 0xCC; 
-byte subNodeHop = 0xBA;
+byte subNode = 0xCC;
+byte subNodeHop = 0xCA;
 byte doneSubGnodeB = 0xAB;
 int counter = 0;
 int timer = 0;
@@ -102,7 +103,28 @@ void loop() {
     j++;
     if(j == 2) j = 0;
   }
-  delay(50);
+  if (LoRa.parsePacket()) {
+    // received a packet
+    source = LoRa.read();
+    if (source == subNodeHop) {
+      digitalWrite(led,HIGH);
+      counter++;
+
+      int i = 0;
+      while (LoRa.available()){
+        hopData[i] = (char)LoRa.read();
+        i++;
+      }
+
+      // Send Data to Serial
+      LoRa.beginPacket();
+      LoRa.write(subNode); // destination
+      LoRa.print(hopData);
+      LoRa.endPacket();
+      memset (hopData, 0, sizeof(hopData));
+    }
+  }
+  delay(20);
 }
 
 void rxMode(){

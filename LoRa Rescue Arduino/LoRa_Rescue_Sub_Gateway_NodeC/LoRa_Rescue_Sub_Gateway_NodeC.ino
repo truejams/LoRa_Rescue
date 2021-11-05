@@ -9,7 +9,7 @@
 #define reset 1
 
 byte gatewayBroadcast = 0x11;     // address of this device
-byte subNode = 0xCC;
+byte subNode = 0xCA;
 byte doneSubGnodeB = 0xAC;
 int dataRec = 0;
 int counter = 0;

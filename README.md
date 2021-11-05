@@ -4,6 +4,7 @@ Revised build v0.5.9 [Yani]
 - Renamed FoliumMapping.html to K-MeansMap.html
 - Improved dbscan() to dbscanOptimize() which optimizes the epsilon parameter 
 - Added 3 outputs: DBSCANElbow.jpeg, DBSCAN.jpg, and DBSCANMap.html
+- Removed 1 output: FiltTrilateration.jpg
 
 Revised build v.0.5.8 [Yani]
 - Added units to the Frequency Distribution Graph

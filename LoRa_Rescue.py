@@ -735,7 +735,7 @@ plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bbox_inches='tight')
 fig += 1
 
-# Plot the data for trilateration w/o the filters
+# Plot the data for trilateration
 plt.figure(fig)
 plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xAve, yAve, label='Average Mobile Node Locations', cmap='brg', s=20)
@@ -755,28 +755,6 @@ plt.xlabel('Longitude [Meters]')
 plt.ylabel('Latitude [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
-fig += 1
-
-# Plot the data for trilateration w/ the filters
-plt.figure(fig)
-plt.scatter(xFilt, yFilt, label='Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xFiltAve, yFiltAve, label='Average Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
-plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
-plt.scatter([], [], marker=' ', label='Parameters:')
-plt.scatter([], [], marker=' ', label='n = '+str(n))
-plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
-plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
-plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
-plt.grid(linewidth=1, color="w")
-ax = plt.gca()
-ax.set_facecolor('gainsboro')
-ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Filtered Trilateration', y=1.05)
-plt.xlabel('Longitude [Meters]')
-plt.ylabel('Latitude [Meters]')
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg', bbox_inches='tight')
 fig += 1
 
 # K-Means
@@ -1153,9 +1131,6 @@ firebaseUpload(LoraRescueStorage,
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')    
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' FiltTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FiltTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')

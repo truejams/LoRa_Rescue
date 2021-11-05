@@ -379,11 +379,11 @@ plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='Optimal n = '+str(optN))
 plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
 plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
-plt.title(dtn + ' 0' + phone  + ' Calibration')
+plt.title(dtn + ' 0' + phone  + ' n Calibration')
 plt.xlabel('n (x'+str(int(1/ninterval))+')')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
-plt.savefig(save_destination + dtn + ' 0' + phone + ' Calibration.jpg', bbox_inches='tight')
+plt.savefig(save_destination + dtn + ' 0' + phone + ' nCalibration.jpg', bbox_inches='tight')
 fig += 1
 
 # Save calibration results to csv and database
@@ -413,7 +413,7 @@ db.child(dateNow + ' Calibration').child(timeNow +' 0'+phone).child("Calibration
 db.child(dateNow + ' Calibration').child(timeNow +' 0'+phone).child("Calibration Data").set(dataCalib3)
 
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phone + ' Calibration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + ' Calibration/' + dtn[11:19].replace("-",":") + ' 0' + phone + '/Calibration.jpg')
+    dtn + ' 0' + phone + ' nCalibration.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + ' Calibration/' + dtn[11:19].replace("-",":") + ' 0' + phone + '/nCalibration.jpg')
 
 print("Saved data to csv and database, see save destination for jpeg.\n")

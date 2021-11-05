@@ -18,15 +18,16 @@ import os
 import pyrebase
 from sklearn.cluster import DBSCAN
 import json
+from sklearn.neighbors import NearestNeighbors
 
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
 # Ianny's Directory
-# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\"
+# save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -59,7 +60,6 @@ n = 2.8
 dro = 1.5
 roRSSI = -32
 
-
 # Trilateration calculation constants
 # GNode GPS Coordinates
 # Format: A B C
@@ -90,10 +90,8 @@ points = 100
 errorTolerance = 50
 
 # DBSCAN calculation constants
-################## CHANGE THIS ACCORDINGLY ##################  
-# Will be removed when an optimization function is made
-epsilon = 50
-minPts = 3
+################## CHANGE THIS ACCORDINGLY ##################   
+minPts = 4 # MinPts = (2*Dimensions - 1) + 1 wherein Dimensions = 2 (x,y)
 
 # Function Declarations
 def listenForData(port,baud):
@@ -484,13 +482,27 @@ def kmeansOptimize(data):
         kmeans = KMeans(n_clusters=i).fit(data)
         inertia.append(kmeans.inertia_)
 
-    #Determine optimal Number of Clusters based on Elbow
-    elbow = KneeLocator(range(1,len(data)),inertia, curve='convex', direction='decreasing')
+    # Determine optimal Number of Clusters based on Elbow
+    elbow = KneeLocator(range(1,len(data)), inertia, curve='convex', direction='decreasing')
 
-    #Perform K-means with elbow no. of clusters
+    # Perform K-means with elbow no. of clusters
     kmeans = KMeans(n_clusters=elbow.knee, n_init=5).fit(data)
 
-    return kmeans,inertia,elbow
+    return kmeans, inertia, elbow
+
+def dbscanOptimize(data, minPts):
+    # Determine distances of each point to their nearest neighbor
+    nNeighbor = NearestNeighbors(n_neighbors=2).fit(data) # reference point is included in n_neighbors
+    nNeighborDistance, nNeighborIndices = nNeighbor.kneighbors(data)
+    nNeighborDistance = np.sort(nNeighborDistance, axis=0)[:,1] # Sort by columns/x values
+
+    # Determine optimal epsilon based on Elbow
+    dbElbow = KneeLocator(range(len(data)), nNeighborDistance, curve='convex', direction='increasing')
+
+    # Perform DBSCAN with epsilon elbow 
+    dbscan = DBSCAN(eps=dbElbow.knee_y, min_samples=minPts).fit(data)
+
+    return dbscan, nNeighborDistance, dbElbow
 
 def distanceFormula(x1, y1, x2, y2):
     distance = np.sqrt(((x1-x2)**2)+((y1-y2)**2))
@@ -566,36 +578,6 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
 
     # Upload files to Firebase Storage
     storage.child(cloudDir).put(localDir)
-
-def dbscan(epsilon, minPts, data, fig):
-    db = DBSCAN(eps=epsilon, min_samples=minPts).fit(data)
-    dbData = data[db.labels_>-1] 
-    dbLabels = db.labels_[db.labels_>-1]
-    dbGraph = plt.figure(fig)
-    plt.scatter(dbData[:,0],dbData[:,1], c=dbLabels, label = 'Mobile Node Clusters', cmap='brg', s=5)
-    plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
-    plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
-    plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='green', s=30)
-    plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
-    plt.scatter([], [], marker=' ', label='Parameters: ')
-    plt.scatter([], [], marker=' ', label='n = '+str(n))
-    plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
-    plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
-    plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
-    plt.scatter([], [], marker=' ', label='ε  = '+str(epsilon))
-    plt.scatter([], [], marker=' ', label='MinPts  = '+str(minPts))
-    plt.grid(linewidth=1, color="w")
-    ax = plt.gca()
-    ax.set_facecolor('gainsboro')
-    ax.set_axisbelow(True)
-    plt.xlabel('x-axis [Meters]')
-    plt.ylabel('y-axis [Meters]')
-    plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
-    plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
-    plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
-    fig += 1
-
-    return fig
 
 # Listen/Read for Data
 # Retrieve RSSI data, date and time, and phone number
@@ -747,13 +729,13 @@ plt.plot([], [], ' ', label='n = '+str(n))
 plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
 plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
 plt.title(dtn + ' 0' + phoneA  + ' Distance Behavior')
-plt.xlabel('Datapoint')
+plt.xlabel('RSSI Index No.')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bbox_inches='tight')
 fig += 1
 
-# Plot the data for trilateration w/o the filters
+# Plot the data for trilateration
 plt.figure(fig)
 plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
 plt.scatter(xAve, yAve, label='Average Mobile Node Locations', cmap='brg', s=20)
@@ -775,28 +757,6 @@ plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
 fig += 1
 
-# Plot the data for trilateration w/ the filters
-plt.figure(fig)
-plt.scatter(xFilt, yFilt, label='Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xFiltAve, yFiltAve, label='Average Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
-plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
-plt.scatter([], [], marker=' ', label='Parameters:')
-plt.scatter([], [], marker=' ', label='n = '+str(n))
-plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
-plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
-plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
-plt.grid(linewidth=1, color="w")
-ax = plt.gca()
-ax.set_facecolor('gainsboro')
-ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Filtered Trilateration', y=1.05)
-plt.xlabel('Longitude [Meters]')
-plt.ylabel('Latitude [Meters]')
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FiltTrilateration.jpg', bbox_inches='tight')
-fig += 1
-
 # K-Means
 print('Performing K-Means...')
 # K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
@@ -816,11 +776,11 @@ kmeans,inertia,elbow = kmeansOptimize(data)
 print('Optimal Number of Clusters is', elbow.knee)
 print('K-Means Done!\n')
 
-# Elbow Plot
+# K-Means Elbow Plot
 plt.figure(fig)
 plt.plot(range(1,len(data)), inertia)
-plt.plot([elbow.knee], inertia[elbow.knee-1], 'ro', label='Optimal Clusters: ' + str(elbow.knee))
-plt.plot([], [], ' ', label='@ SoSD: ' + str("{:.4f}".format(inertia[elbow.knee-1])))
+plt.plot(elbow.knee, elbow.knee_y, 'ro', label='Optimal Clusters: ' + str(elbow.knee))
+plt.plot([], [], ' ', label='@ SoSD: ' + str("{:.4f}".format(elbow.knee_y)))
 plt.xlabel('No. of Clusters')
 plt.ylabel('Sum of Squared Distances')
 plt.title(dtn + ' 0' + phoneA  + ' K-Means Elbow')
@@ -830,18 +790,18 @@ fig += 1
 
 # K-means Plot
 plt.figure(fig)
-plt.scatter(data[:,0],data[:,1], c=kmeans.labels_, label = 'Mobile Node Locations', cmap='brg', s=5)
-plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker = 'x', label = 'Cluster Centers', cmap='brg', s=30)
+plt.scatter(data[:,0], data[:,1], label = 'Mobile Node Locations', c=kmeans.labels_, cmap='brg', s=5)
+plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker='x', label ='Cluster Centers', cmap='brg', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
-plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='green', s=30)
+plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
-plt.scatter([], [], marker=' ', label='n = '+str(n))
-plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
-plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
-plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
-plt.scatter([], [], marker=' ', label='No. of Clusters  = '+str(elbow.knee))
+plt.scatter([], [], marker=' ', label='n = '+ str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+ str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+ str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+ str(points))
+plt.scatter([], [], marker=' ', label='No. of Clusters  = '+ str(elbow.knee))
 plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
@@ -905,16 +865,97 @@ folium.Circle(
 ).add_to(m)
 
 # Save HTML Map File
-m.save(save_destination + dtn + ' 0' + phoneA + ' FoliumMapping.html')
+m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
 
 # DBSCAN
 print('Performing DBSCAN...')
-# Create numpy array 'dataDB' for DBSCAN containing (x,y) coordinates
-dataDB = np.array([[x[0],y[0]]])
-for i in range(1,len(xFilt)):
-    dataDB = np.append(dataDB,[[x[i],y[i]]], axis=0)
-fig = dbscan(epsilon, minPts, dataDB, fig)
+
+dbscan, nNeighborDistance, dbElbow = dbscanOptimize(data, minPts)
+print('Optimal Value for Epsilon is', dbElbow.knee_y)
+print('MinPts required for each cluster is', minPts)
+
 print('DBSCAN Done!\n')
+
+# DBSCAN Elbow Plot
+plt.figure(fig)
+plt.plot(range(0,len(data)), nNeighborDistance)
+plt.plot(dbElbow.knee, dbElbow.knee_y, 'ro', label='Optimal ε: ' + str("{:.4f}".format(dbElbow.knee_y)))
+plt.xlabel('Nearest Neighbor Distance Index No.')
+plt.ylabel('Distance from Nearest Neighbor [Meters]')
+plt.title(dtn + ' 0' + phoneA  + ' DBSCAN Elbow')
+plt.legend() 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCANElbow.jpg') #Change Directory Accordingly
+fig += 1
+    
+# DBSCAN Plot
+plt.figure(fig)
+plt.scatter(data[dbscan.labels_>-1,0], data[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
+plt.scatter(data[dbscan.labels_==-1,0], data[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
+plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters: ')
+plt.scatter([], [], marker=' ', label='n = '+ str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+ str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+ str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+ str(points))
+plt.scatter([], [], marker=' ', label='ε  = '+ str("{:.4f}".format(dbElbow.knee_y)))
+plt.scatter([], [], marker=' ', label='MinPts  = '+ str(minPts))
+plt.scatter([], [], marker=' ', label='No. of Clusters  = '+ str(max(dbscan.labels_)+1))
+plt.grid(linewidth=1, color="w")
+ax = plt.gca()
+ax.set_facecolor('gainsboro')
+ax.set_axisbelow(True)
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
+plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
+fig += 1
+
+# DBSCAN Plot Folium Mapping
+
+# Cartesian to GPS Coordinate Conversion
+latData, longData = cartToGPS(data[dbscan.labels_>-1,0],data[dbscan.labels_>-1,1])
+latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
+latAct, longAct = cartToGPS(xAct, yAct)
+
+# Establish Folium Map
+m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
+
+# Add Mobile Node Locations to Folium Map
+for i in range(len(latData)):
+    folium.Circle(
+        radius=1,
+        location=[latData[i], longData[i]],
+        tooltip='Mobile Node Locations',
+        popup=str(latData[i])+','+str(longData[i]),
+        color='red',
+        fill='True'
+    ).add_to(m)
+
+# Add GNode Locations
+for i in range(len(latg)):
+    folium.Marker(
+        location=[latg[i], longg[i]],
+        tooltip='GNode Locations',
+        popup=str(latg[i])+','+str(longg[i]),
+        icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
+    ).add_to(m)
+
+# Add Average Points
+folium.Circle(
+    radius=1,
+    location=[latAve[0], longAve[0]],
+    tooltip='Average Point',
+    popup=str(latAve[0])+','+str(longAve[0]),
+    color='black',
+    fill='True'
+).add_to(m)
+
+# Save HTML Map File
+m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
 
 # Error Computations
 # Computed Position vs. Actual Position
@@ -1091,20 +1132,23 @@ firebaseUpload(LoraRescueStorage,
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')    
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' FiltTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FiltTrilateration.jpg')
-firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-Means.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' FoliumMapping.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/FoliumMapping.html')
+    dtn + ' 0' + phoneA + ' K-MeansMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/K-MeansMap.html')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANElbow.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DBSCANMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/DBSCANMap.html')
     
 print("Done!")
 

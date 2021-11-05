@@ -848,7 +848,9 @@ plt.ylabel('y-axis [Meters]')
 plt.title(dtn + ' 0' + phoneA  + ' K-Means', y=1.05)
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-Means.jpg', bbox_inches='tight') #Change Directory Accordingly
+plt.show()
 fig += 1
+
 
 # K-means Plot Folium Mapping
 # Cartesian to GPS Coordinate Conversion

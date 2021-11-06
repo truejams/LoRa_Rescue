@@ -23,9 +23,9 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-save_destination = "C:\\LoRa_Rescue\\11-6-21_Data\\"
+# save_destination = "C:\\LoRa_Rescue\\11-6-21_Data\\"
 # Ianny's Directory
-# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
 # save_destination = "C:\\LoRa_Rescue\\"
 
@@ -57,6 +57,10 @@ endrow = 58
 # RSSI to Distance calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
 n = 2.4
+nA = nB = nC = n
+# nA = 2.3
+# nB = 2.7
+# nC = 2.5
 dro = 1
 roRSSI = -30
 
@@ -354,17 +358,12 @@ def importDatabase(date, time, phone):
     print('GNode Longitudes: '+ str(longg))
     return rssiA, rssiB, rssiC, dtn, phone, latg, longg, latAct, longAct
 
-def rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI):
-    distA = list()
-    distB = list()
-    distC = list()
-    rssi = [rssiA,rssiB,rssiC]
-    for i in range(len(rssi[0])):
-        distA.append(pow(10,((roRSSI-int(rssi[0][i]))/(10*n)))*dro)
-        distB.append(pow(10,((roRSSI-int(rssi[1][i]))/(10*n)))*dro)
-        distC.append(pow(10,((roRSSI-int(rssi[2][i]))/(10*n)))*dro)
+def rssiToDist(rssi,n,dro,roRSSI):
+    dist = list()
+    for i in range(len(rssi)):
+        dist.append(pow(10,((roRSSI-int(rssi[i]))/(10*n)))*dro)
 
-    return distA,distB,distC
+    return dist
 
 def drawCircle(xg,yg,rA,rB,rC,points):
     intersect = [[0,[0,0]],[0,[0,0]],[0,[0,0]]]
@@ -606,7 +605,9 @@ for i in range(len(rssiB)):
 # db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
 
 # Convert RSSI to Distance
-distanceAf, distanceBf, distanceCf = rssiToDist(rssiA,rssiB,rssiC,n,dro,roRSSI)
+distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
+distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
+distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
 
 # Convert GPS Coordinates to Cartesian Coordinates
 xg,yg = GPSToCart(latg,longg)

@@ -23,18 +23,18 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-# save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\11-6-21_Data\\"
 # Ianny's Directory
 # save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\"
+# save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
 
 # Arduino Configuration
 ################## CHANGE THIS ACCORDINGLY ##################  
-port = "COM9"
+port = "COM3"
 baud = 115200
 
 # Firebase Web App Configuration
@@ -56,16 +56,16 @@ endrow = 58
 
 # RSSI to Distance calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
-n = 2.8
-dro = 1.5
-roRSSI = -32
+n = 2.4
+dro = 1
+roRSSI = -30
 
 # Trilateration calculation constants
 # GNode GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
-latg = np.array([14.6648848,14.6648496,14.6648452])
-longg = np.array([120.9718980,120.9718835,120.9718860])
+latg = np.array([14.6650378,14.6669613,14.6668839])
+longg = np.array([120.9720720,120.9696413,120.9716495])
 
 # GNode Cartesian Coordinates
 # Format: A B C
@@ -74,8 +74,8 @@ yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
 ################## CHANGE THIS ACCORDINGLY ##################  
-latAct = np.array([14.6648547])
-longAct = np.array([120.9718816])
+latAct = np.array([14.6664678])
+longAct = np.array([120.9704445])
 
 # Actual Mobile Node Cartesian Coordinates
 xAct = np.array([0]) #Target x-coordinate
@@ -591,7 +591,10 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-10-30", "15:05:51", "09976502602")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:06:34", "09976500621")
+
+for i in range(len(rssiB)):
+    rssiB[i] = str(int(int(rssiB[i]) + 15))
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)

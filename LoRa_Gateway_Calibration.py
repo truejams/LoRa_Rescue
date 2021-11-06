@@ -42,7 +42,7 @@ from sklearn.cluster import DBSCAN
 import json
 
 # Variable declarations
-port = 'COM3'
+port = 'COM7'
 baud = 115200
 
 ts = time.localtime() #update time
@@ -53,8 +53,8 @@ dist = list()
 diff = list()
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-# save_destination = "C:\\LoRa_Rescue\\10-30-21_Data\\"
-save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\11-6-21_Data\\"
+# save_destination = "C:\\LoRa_Rescue\\"
 os.chdir(save_destination)
 
 # Distance calculation constants
@@ -63,8 +63,8 @@ n = list()
 nmin = 0.1
 nmax = 10
 ninterval = 0.01
-dro = 1.5
-roRSSI = -32
+dro = 1
+roRSSI = -30
 
 tdist = 0.0
 
@@ -74,16 +74,16 @@ xg = 0
 yg = 0
 
 # Gateway Node Position (GPS coordinates decimal)
-latg = 14.6650923
-longg = 120.9720347
+latg = 14.6649904
+longg = 120.9721006
 
 # Actual Node Coordinates (Cartesian; dist. in meters) ############ DO NOT TOUCH
 xAct = 0            #Target x-coordinate
 yAct = 2.5          #Target y-coordinate
 
 # Actual Mobile node Node Position (GPS Coordinates Decimal)
-latAct = 14.6657547
-longAct = 120.9712846
+latAct = 14.6663331
+longAct = 120.9704678
 
 # Firebase Web App Configuration
 LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
@@ -341,16 +341,17 @@ dtn = dtn[0:19]
 # Import Data using Serial Listener or Import Database
 
 # rssi, phone = listenForData(port,baud)
-rssi, phone = serialListener(port, baud)
+# rssi, phone = serialListener(port, baud)
 
-# rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-10-30", "14:35:07", "09976800621")
-# dateNow = dtn[0:10]
-# timeNow = dtn[11:19]
-# latg = latgnode[0]
-# longg = longgnode[0]
+rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-11-06", "17:26:36", "09976500626")
+dateNow = dtn[0:10]
+timeNow = dtn[11:19]
+latg = latgnode[1]
+longg = longgnode[1]
 
 dtn = dtn.replace(':','-')
-actDist = haversine(latg,longg,latAct[0],longAct[0])
+# actDist = haversine(latg,longg,latAct[0],longAct[0]) #Code for importing from database
+actDist = haversine(latg,longg,latAct[0],longAct[0]) #Code for Serial Listening
 print("\nMobile Node is "+ str(actDist) +" meters away gateway A")
 
 for i in range(len(rssi)): rssi[i] = int(rssi[i])

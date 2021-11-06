@@ -25,9 +25,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\Users\\Benj\\Desktop\\LoRa_Rescue\\10-23-21_Data\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -87,7 +87,7 @@ points = 100
 
 # Tolerance filter error margin
 ################## CHANGE THIS ACCORDINGLY ##################  
-errorTolerance = 50
+errorTolerance = 1000
 
 # DBSCAN calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################   
@@ -457,11 +457,11 @@ def trilaterateCircle(xCirc,yCirc,intersect,points):
     yTrilat = sum(y)/3
     return xTrilat,yTrilat
 
-def tolFilter(x,y,errorTolerance):
+def tolFilter(x,y,xAve,yAve,errorTolerance):
     i = 0
-    while i != 60:
+    while i != 50:
         if i == len(y):
-            i = 60
+            i = 50
             continue
         e = 0
         dist = np.sqrt(((xAve-x[i])**2)+((yAve-y[i])**2))
@@ -591,7 +591,7 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-10-30", "14:46:14", "09976800632")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-10-30", "15:05:51", "09976502602")
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -643,15 +643,12 @@ xCircAve, yCircAve, inter = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
 xAve,yAve = trilaterateCircle(xCircAve,yCircAve,inter,points)
 print("Done Trilaterating!\n")
 
-# Tolerance Filter
-xFilt,yFilt = tolFilter(x,y,errorTolerance)
-
-# Disable Tolerance Filter
-################## CHANGE THIS ACCORDINGLY ##################  
-xFilt = x
-yFilt = y
+# Tolerance Filter  
+x,y = tolFilter(x,y,xAve,yAve,errorTolerance)
 
 # Mean Coordinates after Tolerance Filter
+xFilt = x
+yFilt = y
 xFiltAve = np.mean(xFilt)
 yFiltAve = np.mean(yFilt)
 
@@ -972,6 +969,9 @@ plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='n = '+str(n))
 plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
 plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.plot([], [], ' ', label='Output:')
+plt.plot([], [], ' ', label='Average Error = '+str("{:.4f}".format(compVactAve[0])))
 plt.title(dtn + ' 0' + phoneA  + ' Error Behavior')
 plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')

@@ -343,13 +343,13 @@ dtn = dtn[0:19]
 # rssi, phone = listenForData(port,baud)
 rssi, phone = serialListener(port, baud)
 
-# rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-10-30", "14:46:14", "09976800632")
+# rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-10-30", "14:35:07", "09976800621")
 # dateNow = dtn[0:10]
 # timeNow = dtn[11:19]
-# dtn = dtn.replace(':','-')
 # latg = latgnode[0]
 # longg = longgnode[0]
 
+dtn = dtn.replace(':','-')
 actDist = haversine(latg,longg,latAct[0],longAct[0])
 print("\nMobile Node is "+ str(actDist) +" meters away gateway A")
 

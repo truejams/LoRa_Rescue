@@ -23,9 +23,9 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-# save_destination = "C:\\LoRa_Rescue\\11-6-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
 # save_destination = "C:\\LoRa_Rescue\\"
 
@@ -56,7 +56,7 @@ endrow = 58
 
 # RSSI to Distance calculation constants
 ################## CHANGE THIS ACCORDINGLY ##################  
-n = 2.4
+n = 2.8
 nA = nB = nC = n
 # nA = 2.3
 # nB = 2.7
@@ -68,8 +68,8 @@ roRSSI = -30
 # GNode GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
-latg = np.array([14.6650378,14.6669613,14.6668839])
-longg = np.array([120.9720720,120.9696413,120.9716495])
+latg = np.array([14.6650408,14.6675220,14.6664678])
+longg = np.array([120.9720531,120.9690570,120.9704445])
 
 # GNode Cartesian Coordinates
 # Format: A B C
@@ -78,8 +78,8 @@ yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
 ################## CHANGE THIS ACCORDINGLY ##################  
-latAct = np.array([14.6664678])
-longAct = np.array([120.9704445])
+latAct = np.array([14.6667281])
+longAct = np.array([120.9700944])
 
 # Actual Mobile Node Cartesian Coordinates
 xAct = np.array([0]) #Target x-coordinate
@@ -308,7 +308,7 @@ def checkDatabase(dateNow,timeNow,phone):
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     entries = df.iloc[0, 1]
     print(dateNow + " " + timePrev + " has " + str(len(entries)) + " entries")
-    if len(entries) >= 50:
+    if len(entries) >= 60:
         check = 1
     return check, timePrev
 
@@ -458,9 +458,9 @@ def trilaterateCircle(xCirc,yCirc,intersect,points):
 
 def tolFilter(x,y,xAve,yAve,errorTolerance):
     i = 0
-    while i != 50:
+    while i != 60:
         if i == len(y):
-            i = 50
+            i = 60
             continue
         e = 0
         dist = np.sqrt(((xAve-x[i])**2)+((yAve-y[i])**2))
@@ -590,10 +590,15 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:06:34", "09976500621")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:58:40", "09976500612")
 
-for i in range(len(rssiB)):
-    rssiB[i] = str(int(int(rssiB[i]) + 15))
+# Compensation
+
+# for i in range(len(rssiB)):
+#     rssiB[i] = str(int(int(rssiB[i]) + 5))
+
+for i in range(len(rssiA)):
+    rssiA[i] = str(int(int(rssiA[i]) - 6))
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)

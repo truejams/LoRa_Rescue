@@ -42,7 +42,7 @@ from sklearn.cluster import DBSCAN
 import json
 
 # Variable declarations
-port = 'COM7'
+port = 'COM3'
 baud = 115200
 
 ts = time.localtime() #update time
@@ -53,7 +53,7 @@ dist = list()
 diff = list()
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-save_destination = "C:\\LoRa_Rescue\\11-6-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
 # save_destination = "C:\\LoRa_Rescue\\"
 os.chdir(save_destination)
 
@@ -74,16 +74,16 @@ xg = 0
 yg = 0
 
 # Gateway Node Position (GPS coordinates decimal)
-latg = 14.6649904
-longg = 120.9721006
+latg = 14.6650408
+longg = 120.9720531
 
 # Actual Node Coordinates (Cartesian; dist. in meters) ############ DO NOT TOUCH
 xAct = 0            #Target x-coordinate
 yAct = 2.5          #Target y-coordinate
 
 # Actual Mobile node Node Position (GPS Coordinates Decimal)
-latAct = 14.6663331
-longAct = 120.9704678
+latAct = 14.6664525
+longAct = 120.9705521
 
 # Firebase Web App Configuration
 LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
@@ -194,7 +194,7 @@ def checkDatabase(dateNow,timeNow,phone):
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     entries = df.iloc[0, 1]
     print(dateNow + " " + timePrev + " has " + str(len(entries)) + " entries")
-    if len(entries) >= 50:
+    if len(entries) >= 15:
         check = 1
     return check, timePrev
 
@@ -341,17 +341,17 @@ dtn = dtn[0:19]
 # Import Data using Serial Listener or Import Database
 
 # rssi, phone = listenForData(port,baud)
-# rssi, phone = serialListener(port, baud)
+rssi, phone = serialListener(port, baud)
 
-rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-11-06", "17:26:36", "09976500626")
-dateNow = dtn[0:10]
-timeNow = dtn[11:19]
-latg = latgnode[1]
-longg = longgnode[1]
+# rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-11-06", "17:26:36", "09976500626")
+dateNow = dtn[0:10] #Don't comment
+timeNow = dtn[11:19] #Don't comment
+# latg = latgnode[1]
+# longg = longgnode[1]
 
 dtn = dtn.replace(':','-')
 # actDist = haversine(latg,longg,latAct[0],longAct[0]) #Code for importing from database
-actDist = haversine(latg,longg,latAct[0],longAct[0]) #Code for Serial Listening
+actDist = haversine(latg,longg,latAct,longAct) #Code for Serial Listening
 print("\nMobile Node is "+ str(actDist) +" meters away gateway A")
 
 for i in range(len(rssi)): rssi[i] = int(rssi[i])

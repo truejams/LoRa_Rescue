@@ -424,13 +424,13 @@ def trilaterateCircle(xCirc,yCirc,intersect,points):
         for j in range(points):
             for k in range(points):
                 if i <= 1:
-                    dist[i] = ((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2)
+                    dist[i] = sqrt((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2)
                     if dist[i] < deltaDist[i]:
                         deltaDist[i] = dist[i]
                         x[i] = (xCirc[i][j]+xCirc[i+1][k])/2
                         y[i] = (yCirc[i][j]+yCirc[i+1][k])/2
                 elif i == 2:
-                    dist[i] = ((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2)
+                    dist[i] = sqrt((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2)
                     if dist[i] < deltaDist[i]:
                         deltaDist[i] = dist[i]
                         x[i] = (xCirc[i][j]+xCirc[0][k])/2

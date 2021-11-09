@@ -591,7 +591,7 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
-# Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
+# Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
 rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "08:47:21 09976500601")
 
 # Compensation

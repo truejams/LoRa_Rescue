@@ -23,11 +23,11 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
+# save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
 # Ianny's Directory
 # save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -327,8 +327,10 @@ def importCSV(save_destination, startrow, endrow):
     
     return rssiA, rssiB, rssiC, dtn, phone
 
-def importDatabase(date, time, phone):
-    phoneTime = time + " " + phone
+def importDatabase(date, phoneTime):
+    temp = phoneTime.split()
+    time = temp[0]
+    phone = temp[1]
     firebase = pyrebase.initialize_app(LoraRescueStorage)
     db = firebase.database()
     databaseEntries = db.child(date).child(phoneTime).child("Raw RSSI Values").get()
@@ -590,7 +592,7 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:58:40", "09976500612")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "08:47:21 09976500601")
 
 # Compensation
 
@@ -599,6 +601,8 @@ rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase
 
 for i in range(len(rssiA)):
     rssiA[i] = str(int(int(rssiA[i]) - 6))
+for i in range(len(rssiC)):
+    rssiC[i] = str(int(int(rssiC[i]) + 6))
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)

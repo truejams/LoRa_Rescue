@@ -23,9 +23,9 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
+# save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
 # Ianny's Directory
-# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
 # save_destination = "C:\\LoRa_Rescue\\"
 
@@ -327,8 +327,10 @@ def importCSV(save_destination, startrow, endrow):
     
     return rssiA, rssiB, rssiC, dtn, phone
 
-def importDatabase(date, time, phone):
-    phoneTime = time + " " + phone
+def importDatabase(date, phoneTime):
+    temp = phoneTime.split()
+    time = temp[0]
+    phone = temp[1]
     firebase = pyrebase.initialize_app(LoraRescueStorage)
     db = firebase.database()
     databaseEntries = db.child(date).child(phoneTime).child("Raw RSSI Values").get()
@@ -422,13 +424,13 @@ def trilaterateCircle(xCirc,yCirc,intersect,points):
         for j in range(points):
             for k in range(points):
                 if i <= 1:
-                    dist[i] = ((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2)
+                    dist[i] = sqrt((xCirc[i][j]-xCirc[i+1][k])**2)+((yCirc[i][j]-yCirc[i+1][k])**2)
                     if dist[i] < deltaDist[i]:
                         deltaDist[i] = dist[i]
                         x[i] = (xCirc[i][j]+xCirc[i+1][k])/2
                         y[i] = (yCirc[i][j]+yCirc[i+1][k])/2
                 elif i == 2:
-                    dist[i] = ((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2)
+                    dist[i] = sqrt((xCirc[i][j]-xCirc[0][k])**2)+((yCirc[i][j]-yCirc[0][k])**2)
                     if dist[i] < deltaDist[i]:
                         deltaDist[i] = dist[i]
                         x[i] = (xCirc[i][j]+xCirc[0][k])/2
@@ -652,15 +654,14 @@ def kalman_filter(signal, A, H, Q, R):
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
-# Format Date: "2021-10-30" Time: "14:46:14" Phone: "09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:58:40", "09976500612")
+# Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "08:47:21 09976500601")
 
 # Compensation
 
 # for i in range(len(rssiB)):
 #     rssiB[i] = str(int(int(rssiB[i]) + 5))
 
-# for i in range(len(rssiA)):
 #     rssiA[i] = str(int(int(rssiA[i]) - 6))
 
 rssiA_int = [int(i) for i in rssiA]
@@ -670,9 +671,11 @@ rssiC_int = [int(i) for i in rssiC]
 rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=100, R=1)
 rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=100, R=1)
 rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=100, R=1)
+# for i in range(len(rssiA)):
+# for i in range(len(rssiC)):
+#     rssiC[i] = str(int(int(rssiC[i]) + 6))
 
 # Save RSSI values to Firebase Database
-# firebase = pyrebase.initialize_app(LoraRescueStorage)
 # db = firebase.database()
 # dataRSSI = {"RSSI Gateway A":list(rssiA),
 #     "RSSI Gateway B":list(rssiB),
@@ -788,7 +791,10 @@ for bar in plots.patches:
                     size=9, xytext=(0, 8),
                     textcoords='offset points')
 
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
+plt.setp(axes[0].get_xticklabels(), rotation=45, horizontalalignment='right')
+plt.setp(axes[1].get_xticklabels(), rotation=45, horizontalalignment='right')
+plt.setp(axes[2].get_xticklabels(), rotation=45, horizontalalignment='right')
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg', bbox_inches='tight')
 fig += 1
 
 #For the .py file exclusively, the DB graph unexpectedly mixes with the FD graph without plt.close()

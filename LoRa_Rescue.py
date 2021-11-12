@@ -25,9 +25,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
 # Ianny's Directory
-# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\"
+# save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -716,7 +716,10 @@ for bar in plots.patches:
                     size=9, xytext=(0, 8),
                     textcoords='offset points')
 
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg')
+plt.setp(axes[0].get_xticklabels(), rotation=45, horizontalalignment='right')
+plt.setp(axes[1].get_xticklabels(), rotation=45, horizontalalignment='right')
+plt.setp(axes[2].get_xticklabels(), rotation=45, horizontalalignment='right')
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg', bbox_inches='tight')
 fig += 1
 
 #For the .py file exclusively, the DB graph unexpectedly mixes with the FD graph without plt.close()

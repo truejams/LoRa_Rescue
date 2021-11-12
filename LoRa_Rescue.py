@@ -578,6 +578,69 @@ def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Upload files to Firebase Storage
     storage.child(cloudDir).put(localDir)
 
+
+############ Kalman Filter Functions ##########
+
+def kalman_block(x, P, s, A, H, Q, R):
+
+    """
+    Prediction and update in Kalman filter
+
+    input:
+        - signal: signal to be filtered
+        - x: previous mean state
+        - P: previous variance state
+        - s: current observation
+        - A, H, Q, R: kalman filter parameters
+
+    output:
+        - x: mean state prediction
+        - P: variance state prediction
+
+    """
+
+    # check laaraiedh2209 for further understand these equations
+
+    x_mean = A * x + np.random.normal(0, Q, 1)
+    P_mean = A * P * A + Q
+
+    K = P_mean * H * (1 / (H * P_mean * H + R))
+    x = x_mean + K * (s - H * x_mean)
+    P = (1 - K * H) * P_mean
+
+    return x, P
+
+
+def kalman_filter(signal, A, H, Q, R):
+
+    """
+
+    Implementation of Kalman filter.
+    Takes a signal and filter parameters and returns the filtered signal.
+
+    input:
+        - signal: signal to be filtered
+        - A, H, Q, R: kalman filter parameters
+
+    output:
+        - filtered signal
+
+    """
+
+    predicted_signal = []
+
+    x = signal[0]                                 # takes first value as first filter prediction
+    P = 0                                         # set first covariance state value to zero
+
+    predicted_signal.append(x)
+    for j, s in enumerate(signal[1:]):            # iterates on the entire signal, except the first element
+
+        x, P = kalman_block(x, P, s, A, H, Q, R)  # calculates next state prediction
+
+        predicted_signal.append(x)                # update predicted signal with this step calculation
+
+    return predicted_signal
+
 # Listen/Read for Data
 # Retrieve RSSI data, date and time, and phone number
 
@@ -597,8 +660,16 @@ rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase
 # for i in range(len(rssiB)):
 #     rssiB[i] = str(int(int(rssiB[i]) + 5))
 
-for i in range(len(rssiA)):
-    rssiA[i] = str(int(int(rssiA[i]) - 6))
+# for i in range(len(rssiA)):
+#     rssiA[i] = str(int(int(rssiA[i]) - 6))
+
+rssiA_int = [int(i) for i in rssiA]
+rssiB_int = [int(i) for i in rssiB]
+rssiC_int = [int(i) for i in rssiC]
+
+rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=100, R=1)
+rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=100, R=1)
+rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=100, R=1)
 
 # Save RSSI values to Firebase Database
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
@@ -613,6 +684,11 @@ for i in range(len(rssiA)):
 distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
 distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
 distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
+
+# Convert Kalman Filter RSSI to Distance
+# distanceAf = rssiToDist(rssiA_kalman,nC,dro,roRSSI)
+# distanceBf = rssiToDist(rssiB_kalman,nC,dro,roRSSI)
+# distanceCf = rssiToDist(rssiC_kalman,nC,dro,roRSSI)
 
 # Convert GPS Coordinates to Cartesian Coordinates
 xg,yg = GPSToCart(latg,longg)

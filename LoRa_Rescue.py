@@ -686,8 +686,8 @@ distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
 distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
 
 # Convert Kalman Filter RSSI to Distance
-# distanceAf = rssiToDist(rssiA_kalman,nC,dro,roRSSI)
-# distanceBf = rssiToDist(rssiB_kalman,nC,dro,roRSSI)
+# distanceAf = rssiToDist(rssiA_kalman,nA,dro,roRSSI)
+# distanceBf = rssiToDist(rssiB_kalman,nB,dro,roRSSI)
 # distanceCf = rssiToDist(rssiC_kalman,nC,dro,roRSSI)
 
 # Convert GPS Coordinates to Cartesian Coordinates

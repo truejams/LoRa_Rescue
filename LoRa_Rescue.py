@@ -664,13 +664,16 @@ rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase
 
 #     rssiA[i] = str(int(int(rssiA[i]) - 6))
 
-rssiA_int = [int(i) for i in rssiA]
-rssiB_int = [int(i) for i in rssiB]
-rssiC_int = [int(i) for i in rssiC]
+################### RSSI Kalman ######################
 
-rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=100, R=1)
-rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=100, R=1)
-rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=100, R=1)
+# rssiA_int = [int(i) for i in rssiA]
+# rssiB_int = [int(i) for i in rssiB]
+# rssiC_int = [int(i) for i in rssiC]
+
+# rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=10, R=1)
+# rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=10, R=1)
+# rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=10, R=1)
+
 # for i in range(len(rssiA)):
 # for i in range(len(rssiC)):
 #     rssiC[i] = str(int(int(rssiC[i]) + 6))

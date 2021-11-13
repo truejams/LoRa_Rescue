@@ -23,9 +23,9 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-# save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\11-13-21_Data\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
 # save_destination = "C:\\LoRa_Rescue\\"
 
@@ -68,8 +68,8 @@ roRSSI = -30
 # GNode GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
-latg = np.array([14.6650408,14.6675220,14.6664678])
-longg = np.array([120.9720531,120.9690570,120.9704445])
+latg = np.array([14.6648523,14.6648505,14.6648519])
+longg = np.array([120.9719036,120.9719038,120.9719050])
 
 # GNode Cartesian Coordinates
 # Format: A B C
@@ -78,8 +78,9 @@ yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
 ################## CHANGE THIS ACCORDINGLY ##################  
-latAct = np.array([14.6667281])
-longAct = np.array([120.9700944])
+latAct = np.array([14.6648521])
+longAct = np.array([120.9719037])
+
 
 # Actual Mobile Node Cartesian Coordinates
 xAct = np.array([0]) #Target x-coordinate
@@ -224,7 +225,7 @@ def serialListener(port,baud):
         elif gatewayID == 'B':
             ok[1] = 1
             phoneB = phone
-            temprssiB = rssi
+            temprssiB = str(int(rssi) + 9)
         elif gatewayID == 'C':
             ok[2] = 1
             phoneC = phone
@@ -268,7 +269,8 @@ def serialListener(port,baud):
     rssiA = df.iloc[0, 1]
     rssiB = df.iloc[1, 1]
     rssiC = df.iloc[2, 1]
-    dtn = dateNow + " " + timeNow
+    temptime = timeNow.split()
+    dtn = dateNow + " " + temptime[0]
     dtn = dtn.replace(':','-')
     with open(save_destination+'rawData.csv', mode='a') as logs:
         logswrite = csv.writer(logs, dialect='excel', lineterminator='\n')
@@ -649,19 +651,18 @@ def kalman_filter(signal, A, H, Q, R):
 # Listen to COM port and check for errors
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
-# rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
+rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "08:47:21 09976500601")
+# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "08:47:21 09976500601")
 
 # Compensation
 
 # for i in range(len(rssiB)):
 #     rssiB[i] = str(int(int(rssiB[i]) + 5))
-
 #     rssiA[i] = str(int(int(rssiA[i]) - 6))
 
 ################### RSSI Kalman ######################
@@ -677,14 +678,6 @@ rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase
 # for i in range(len(rssiA)):
 # for i in range(len(rssiC)):
 #     rssiC[i] = str(int(int(rssiC[i]) + 6))
-
-# Save RSSI values to Firebase Database
-# db = firebase.database()
-# dataRSSI = {"RSSI Gateway A":list(rssiA),
-#     "RSSI Gateway B":list(rssiB),
-#     "RSSI Gateway C":list(rssiC)}
-# dtemp = dtn
-# db.child(dtemp.replace("-",":")+' '+'0'+phoneA).child("Raw RSSI Values").set(dataRSSI)
 
 # Convert RSSI to Distance
 distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
@@ -733,6 +726,9 @@ for i in range(len(distanceAf)):
 xCircAve, yCircAve, inter = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
 xAve,yAve = trilaterateCircle(xCircAve,yCircAve,inter,points)
 print("Done Trilaterating!\n")
+
+print(x)
+print(y)
 
 # Tolerance Filter  
 x,y = tolFilter(x,y,xAve,yAve,errorTolerance)

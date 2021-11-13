@@ -42,7 +42,7 @@ from sklearn.cluster import DBSCAN
 import json
 
 # Variable declarations
-port = 'COM3'
+port = 'COM6'
 baud = 115200
 
 ts = time.localtime() #update time
@@ -53,7 +53,7 @@ dist = list()
 diff = list()
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-save_destination = "C:\\LoRa_Rescue\\11-7-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\11-13-21_Data\\"
 # save_destination = "C:\\LoRa_Rescue\\"
 os.chdir(save_destination)
 
@@ -74,16 +74,16 @@ xg = 0
 yg = 0
 
 # Gateway Node Position (GPS coordinates decimal)
-latg = 14.6650408
-longg = 120.9720531
+latg = 14.6651267
+longg = 120.9720926
 
 # Actual Node Coordinates (Cartesian; dist. in meters) ############ DO NOT TOUCH
 xAct = 0            #Target x-coordinate
 yAct = 2.5          #Target y-coordinate
 
 # Actual Mobile node Node Position (GPS Coordinates Decimal)
-latAct = 14.6664525
-longAct = 120.9705521
+latAct = 14.6664435
+longAct = 120.9704663
 
 # Firebase Web App Configuration
 LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
@@ -194,7 +194,7 @@ def checkDatabase(dateNow,timeNow,phone):
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     entries = df.iloc[0, 1]
     print(dateNow + " " + timePrev + " has " + str(len(entries)) + " entries")
-    if len(entries) >= 15:
+    if len(entries) >= 30:
         check = 1
     return check, timePrev
 

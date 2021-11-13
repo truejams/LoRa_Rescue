@@ -68,8 +68,8 @@ roRSSI = -30
 # GNode GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
-latg = np.array([14.6648523,14.6648505,14.6648519])
-longg = np.array([120.9719036,120.9719038,120.9719050])
+latg = np.array([14.6651047,14.6671611,14.6664435])
+longg = np.array([120.9720628,120.9695632,120.9704663])
 
 # GNode Cartesian Coordinates
 # Format: A B C
@@ -78,9 +78,13 @@ yg = np.array([0,0,0])
 
 # Actual Mobile Node GPS Coordinates
 ################## CHANGE THIS ACCORDINGLY ##################  
-latAct = np.array([14.6648521])
-longAct = np.array([120.9719037])
+# A - 11-13-21
+latAct = np.array([14.6667305])
+longAct = np.array([120.9700698])
 
+# B - 11-13-21
+# latAct = np.array([14.6656659])
+# longAct = np.array([120.9713092])
 
 # Actual Mobile Node Cartesian Coordinates
 xAct = np.array([0]) #Target x-coordinate
@@ -310,7 +314,7 @@ def checkDatabase(dateNow,timeNow,phone):
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     entries = df.iloc[0, 1]
     print(dateNow + " " + timePrev + " has " + str(len(entries)) + " entries")
-    if len(entries) >= 60:
+    if len(entries) >= 50:
         check = 1
     return check, timePrev
 
@@ -462,9 +466,9 @@ def trilaterateCircle(xCirc,yCirc,intersect,points):
 
 def tolFilter(x,y,xAve,yAve,errorTolerance):
     i = 0
-    while i != 60:
+    while i != 50:
         if i == len(y):
-            i = 60
+            i = 50
             continue
         e = 0
         dist = np.sqrt(((xAve-x[i])**2)+((yAve-y[i])**2))
@@ -657,7 +661,7 @@ rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "08:47:21 09976500601")
+# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "15:41:48 09976500641")
 
 # Compensation
 

@@ -23,7 +23,7 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-save_destination = "C:\\LoRa_Rescue\\11-13-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\11-14-21_KalmanTests\\"
 # Ianny's Directory
 # save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
@@ -655,13 +655,13 @@ def kalman_filter(signal, A, H, Q, R):
 # Listen to COM port and check for errors
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = listenForData(port,baud)
-rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
+# rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "15:41:48 09976500641")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:33:03 09976500622")
 
 # Compensation
 
@@ -671,27 +671,27 @@ rssiA, rssiB, rssiC, dtn, phoneA = serialListener(port,baud)
 
 ################### RSSI Kalman ######################
 
-# rssiA_int = [int(i) for i in rssiA]
-# rssiB_int = [int(i) for i in rssiB]
-# rssiC_int = [int(i) for i in rssiC]
+rssiA_int = [int(i) for i in rssiA]
+rssiB_int = [int(i) for i in rssiB]
+rssiC_int = [int(i) for i in rssiC]
 
-# rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=10, R=1)
-# rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=10, R=1)
-# rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=10, R=1)
+rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.005, R=1)
+rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.005, R=1)
+rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=0.005, R=1)
 
 # for i in range(len(rssiA)):
 # for i in range(len(rssiC)):
 #     rssiC[i] = str(int(int(rssiC[i]) + 6))
 
 # Convert RSSI to Distance
-distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
-distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
-distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
+# distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
+# distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
+# distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
 
 # Convert Kalman Filter RSSI to Distance
-# distanceAf = rssiToDist(rssiA_kalman,nA,dro,roRSSI)
-# distanceBf = rssiToDist(rssiB_kalman,nB,dro,roRSSI)
-# distanceCf = rssiToDist(rssiC_kalman,nC,dro,roRSSI)
+distanceAf = rssiToDist(rssiA_kalman,nA,dro,roRSSI)
+distanceBf = rssiToDist(rssiB_kalman,nB,dro,roRSSI)
+distanceCf = rssiToDist(rssiC_kalman,nC,dro,roRSSI)
 
 # Convert GPS Coordinates to Cartesian Coordinates
 xg,yg = GPSToCart(latg,longg)
@@ -731,8 +731,8 @@ xCircAve, yCircAve, inter = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
 xAve,yAve = trilaterateCircle(xCircAve,yCircAve,inter,points)
 print("Done Trilaterating!\n")
 
-print(x)
-print(y)
+# print(x)
+# print(y)
 
 # Tolerance Filter  
 x,y = tolFilter(x,y,xAve,yAve,errorTolerance)

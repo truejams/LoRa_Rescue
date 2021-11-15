@@ -42,7 +42,7 @@ from sklearn.cluster import DBSCAN
 import json
 
 # Variable declarations
-port = 'COM6'
+port = 'COM3'
 baud = 115200
 
 ts = time.localtime() #update time
@@ -74,16 +74,16 @@ xg = 0
 yg = 0
 
 # Gateway Node Position (GPS coordinates decimal)
-latg = 14.6651267
-longg = 120.9720926
+latg = 14.6651047 
+longg = 120.9720628
 
 # Actual Node Coordinates (Cartesian; dist. in meters) ############ DO NOT TOUCH
 xAct = 0            #Target x-coordinate
 yAct = 2.5          #Target y-coordinate
 
 # Actual Mobile node Node Position (GPS Coordinates Decimal)
-latAct = 14.6664435
-longAct = 120.9704663
+latAct = 14.6679725
+longAct = 120.9685324
 
 # Firebase Web App Configuration
 LoraRescueStorage = {'apiKey': "AIzaSyAN2jdAfGBhbPz446Lho_Jmu2eysU6Hvqw",
@@ -194,7 +194,7 @@ def checkDatabase(dateNow,timeNow,phone):
     df = pd.read_json(json.dumps(list(databaseEntries.val().items())))
     entries = df.iloc[0, 1]
     print(dateNow + " " + timePrev + " has " + str(len(entries)) + " entries")
-    if len(entries) >= 30:
+    if len(entries) >= 20:
         check = 1
     return check, timePrev
 

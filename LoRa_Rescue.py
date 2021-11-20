@@ -27,7 +27,7 @@ from sklearn.neighbors import NearestNeighbors
 # Ianny's Directory
 save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -661,13 +661,15 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:33:03 09976500622")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "15:41:48 09976500641")
 
 # Compensation
 
-# for i in range(len(rssiB)):
-#     rssiB[i] = str(int(int(rssiB[i]) + 5))
-#     rssiA[i] = str(int(int(rssiA[i]) - 6))
+for i in range(len(rssiB)):
+    rssiA[i] = str(int(int(rssiA[i]) - 8))
+    rssiB[i] = str(int(int(rssiB[i]) - 13))
+    rssiC[i] = str(int(int(rssiC[i]) - 7))
+
 
 ################### RSSI Kalman ######################
 
@@ -829,7 +831,7 @@ fig += 1
 # Plot the data for trilateration
 plt.figure(fig)
 plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
-plt.scatter(xAve, yAve, label='Average Mobile Node Locations', cmap='brg', s=20)
+plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters:')
@@ -884,7 +886,6 @@ plt.figure(fig)
 plt.scatter(data[:,0], data[:,1], label = 'Mobile Node Locations', c=kmeans.labels_, cmap='brg', s=5)
 plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker='x', label ='Cluster Centers', cmap='brg', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
-plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
@@ -945,16 +946,6 @@ for i in range(len(latg)):
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
 
-# Add Average Points
-folium.Circle(
-    radius=1,
-    location=[latAve[0], longAve[0]],
-    tooltip='Average Point',
-    popup=str(latAve[0])+','+str(longAve[0]),
-    color='black',
-    fill='True'
-).add_to(m)
-
 # Save HTML Map File
 m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
 
@@ -983,7 +974,6 @@ plt.figure(fig)
 plt.scatter(data[dbscan.labels_>-1,0], data[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
 plt.scatter(data[dbscan.labels_==-1,0], data[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
-plt.scatter(xAve, yAve, marker='^', label='Average Point', c='black', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
@@ -1035,16 +1025,6 @@ for i in range(len(latg)):
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
 
-# Add Average Points
-folium.Circle(
-    radius=1,
-    location=[latAve[0], longAve[0]],
-    tooltip='Average Point',
-    popup=str(latAve[0])+','+str(longAve[0]),
-    color='black',
-    fill='True'
-).add_to(m)
-
 # Save HTML Map File
 m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
 
@@ -1052,6 +1032,8 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
 # Computed Position vs. Actual Position
 compVact, centVave, compVcent = errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
 compVactAve = sum(compVact)/len(compVact)
+compVactMax = max(compVact)
+compVactMin = min(compVact)
 
 # Plot the behavior of the error
 plt.figure(fig)
@@ -1066,6 +1048,8 @@ plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
 plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.plot([], [], ' ', label='Output:')
 plt.plot([], [], ' ', label='Average Error = '+str("{:.4f}".format(compVactAve[0])))
+plt.plot([], [], ' ', label='Max Error = '+str("{:.4f}".format(compVactMax[0])))
+plt.plot([], [], ' ', label='Min Error = '+str("{:.4f}".format(compVactMin[0])))
 plt.title(dtn + ' 0' + phoneA  + ' Error Behavior')
 plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')

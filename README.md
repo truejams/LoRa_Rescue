@@ -4,8 +4,8 @@ Revised build v0.6.0 [Yani]
 - Changed saving destination of K-MeansMap and DBSCANMap to /Clustering in Firebase Storage
 - Added actual point to all graphs and maps
 - Added Old vs New Trilateration graph and folium mapping
-- Added triImprovement in errorComp() function
-  - Computes for percent difference/improvement from old to new trilateration
+- Added triImprovement output in errorComp() function
+  - triImprovement is the percent difference/improvement from old to new trilateration
 
 Revised build v0.5.9 [Yani]
 - Renamed FoliumMapping.html to K-MeansMap.html

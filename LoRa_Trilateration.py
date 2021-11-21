@@ -416,7 +416,7 @@ def kalman_filter(signal, A, H, Q, R):
     return predicted_signal
 
 # Import data from Realtime Database
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:33:03 09976500622")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "15:41:48 09976500641")
 
 ################### RSSI Kalman ######################
 rssiA_int = [int(i) for i in rssiA]
@@ -471,13 +471,23 @@ xCircAve, yCircAve, inter = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
 xAve,yAve = trilaterateCircle(xCircAve,yCircAve,inter,points)
 print("Done Trilaterating!\n")
 
+# Percent difference/improvement from old to new trilateration
+oldtriVact = distanceFormula(xOld,yOld,xAct,yAct)
+oldtriVact = np.mean(oldtriVact)
+print("oldtriVact:", oldtriVact)
+newtriVact = distanceFormula(np.array([x]),np.array([y]),xAct,yAct)
+newtriVact = np.mean(newtriVact)
+print("newtriVact:", newtriVact)
+triImprovement = abs((newtriVact - oldtriVact) / (oldtriVact))*100
+print("The percent improvement is", str(triImprovement) + "%")
+
 # Plotting New and Old Trilateration Graphs
 fig = 1
 plt.figure(fig,figsize=(10,5))
-plt.scatter(xOld, yOld, label='Old Trilateration', c='orangered', s=20)
-plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='maroon', s=20)
-plt.scatter(x, y, label='New Trilateration', c='deepskyblue', s=20)
-plt.scatter(xAve, yAve, label='New Trilateration Average', c='blue', s=20)
+plt.scatter(xOld, yOld, label='Old Trilateration', c='red', s=20)
+plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='orange', s=20)
+plt.scatter(x, y, label='New Trilateration', c='blue', s=20)
+plt.scatter(xAve, yAve, label='New Trilateration Average', c='cyan', s=20)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
@@ -490,7 +500,7 @@ plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Old vs. New Trilateration', y=1.05)
+plt.title(dtn + ' 0' + phoneA  + ' Old vs New Trilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
@@ -516,7 +526,7 @@ for i in range(len(latDataOld)):
         location=[latDataOld[i], longDataOld[i]],
         tooltip='Old Trilateration',
         popup=str(latDataOld[i])+','+str(longDataOld[i]),
-        color='darkred',
+        color='red',
         fill='True'
     ).add_to(m)
 
@@ -526,7 +536,7 @@ folium.Circle(
     location=[latAveOld[0], longAveOld[0]],
     tooltip='Old Trilateration Average',
     popup=str(latAveOld[0])+','+str(longAveOld[0]),
-    color='red',
+    color='orange',
     fill='True'
 ).add_to(m)
 
@@ -537,7 +547,7 @@ for i in range(len(latData)):
         location=[latData[i], longData[i]],
         tooltip='New Trilateration',
         popup=str(latData[i])+','+str(longData[i]),
-        color='darkblue',
+        color='blue',
         fill='True'
     ).add_to(m)
 
@@ -547,7 +557,7 @@ folium.Circle(
     location=[latAve[0], longAve[0]],
     tooltip='New Trilateration Average',
     popup=str(latAve[0])+','+str(longAve[0]),
-    color='blue',
+    color='lightblue',
     fill='True'
 ).add_to(m)
 

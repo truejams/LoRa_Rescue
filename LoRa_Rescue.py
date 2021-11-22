@@ -23,9 +23,9 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-# save_destination = "C:\\LoRa_Rescue\\11-14-21_KalmanTests\\"
+save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
 # save_destination = "C:\\LoRa_Rescue\\"
 

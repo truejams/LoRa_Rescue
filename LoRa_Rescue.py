@@ -684,11 +684,10 @@ rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase
 
 # Compensation
 
-for i in range(len(rssiB)):
-    rssiA[i] = str(int(int(rssiA[i]) - 8))
-    rssiB[i] = str(int(int(rssiB[i]) - 13))
-    rssiC[i] = str(int(int(rssiC[i]) - 7))
-
+# for i in range(len(rssiB)):
+#     rssiA[i] = str(int(int(rssiA[i]) - 8))
+#     rssiB[i] = str(int(int(rssiB[i]) - 13))
+#     rssiC[i] = str(int(int(rssiC[i]) - 7))
 
 ################### RSSI Kalman ######################
 
@@ -699,10 +698,6 @@ rssiC_int = [int(i) for i in rssiC]
 rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.005, R=1)
 rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.005, R=1)
 rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=0.005, R=1)
-
-# for i in range(len(rssiA)):
-# for i in range(len(rssiC)):
-#     rssiC[i] = str(int(int(rssiC[i]) + 6))
 
 # Convert RSSI to Distance
 # distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
@@ -847,6 +842,31 @@ plt.xlabel('RSSI Index No.')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bbox_inches='tight')
+plt.close()
+fig += 1
+
+# Plot the behavior of the RSSI
+plt.figure(fig)
+plt.plot(rssiA_kalman, 'r', label='GNode A RSSI')
+plt.plot(rssiB_kalman, 'g', label='GNode B RSSI')
+plt.plot(rssiC_kalman, 'b', label='GNode C RSSI')
+rssiAAve = sum(rssiA_kalman)/len(rssiA_kalman)
+rssiBAve = sum(rssiB_kalman)/len(rssiB_kalman)
+rssiCAve = sum(rssiC_kalman)/len(rssiC_kalman)
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAve, 'r.', label='Average GNode A RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAve, 'g.', label='Average GNode B RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAve, 'b.', label='Average GNode C RSSI')
+plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.plot([], [], ' ', label='Parameters:')
+plt.plot([], [], ' ', label='n = '+str(n))
+plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.title(dtn + ' 0' + phoneA  + ' RSSI Behavior')
+plt.xlabel('RSSI Index No.')
+plt.ylabel('dBm')
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RSSIBehavior.jpg', bbox_inches='tight')
+plt.close()
 fig += 1
 
 # Plot the data for trilateration
@@ -869,31 +889,7 @@ plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
-fig += 1
-
-# Plot New vs Old Trilateration Graph
-plt.figure(fig,figsize=(10,5))
-plt.scatter(xOld, yOld, label='Old Trilateration', c='red', s=20)
-plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='orange', s=20)
-plt.scatter(x, y, label='New Trilateration', c='blue', s=20)
-plt.scatter(xAve, yAve, label='New Trilateration Average', c='cyan', s=20)
-plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
-plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
-plt.scatter([], [], marker=' ', label='Parameters:')
-plt.scatter([], [], marker=' ', label='n = '+str(n))
-plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
-plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
-plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
-plt.grid(linewidth=1, color="w")
-ax = plt.gca()
-ax.set_facecolor('gainsboro')
-ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Old vs New Trilateration', y=1.05)
-plt.xlabel('x-axis [Meters]')
-plt.ylabel('y-axis [Meters]')
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' Old vs New Trilateration.jpg', bbox_inches='tight') 
+plt.close()
 fig += 1
 
 # New vs Old Trilateration Plot Folium Mapping
@@ -1168,12 +1164,32 @@ compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)
 
-# Update Old vs New Trilateration Graph
-plt.figure(4)
+# Plot New vs Old Trilateration Graph
+plt.figure(fig,figsize=(10,5))
+plt.scatter(xOld, yOld, label='Old Trilateration', c='red', s=20)
+plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='orange', s=20)
+plt.scatter(x, y, label='New Trilateration', c='blue', s=20)
+plt.scatter(xAve, yAve, label='New Trilateration Average', c='cyan', s=20)
+plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters:')
+plt.scatter([], [], marker=' ', label='n = '+str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
 plt.scatter([], [], marker = ' ', label=' ')
 plt.scatter([], [], marker=' ', label='% Improvement = '+ str("{:.4f}".format(triImprovement)) + "%")
+plt.grid(linewidth=1, color="w")
+ax = plt.gca()
+ax.set_facecolor('gainsboro')
+ax.set_axisbelow(True)
+plt.title(dtn + ' 0' + phoneA  + ' Old vs New Trilateration', y=1.05)
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' Old vs New Trilateration.jpg', bbox_inches='tight') 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' OldVNewTrilateration.jpg', bbox_inches='tight')
+fig += 1
 
 # Plot the behavior of the error
 plt.figure(fig)
@@ -1195,6 +1211,7 @@ plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ErrorBehavior.jpg', bbox_inches='tight')
+plt.close('all')
 fig += 1
 
 # CSV Writing
@@ -1344,14 +1361,17 @@ firebaseUpload(LoraRescueStorage,
     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
 firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/RSSIBehavior.jpg')
+firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/ErrorBehavior.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')    
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' Old vs New Trilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/Old vs New Trilateration.jpg')
+    dtn + ' 0' + phoneA + ' OldVNewTrilateration.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVNewTrilateration.jpg')   
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
@@ -1370,7 +1390,4 @@ firebaseUpload(LoraRescueStorage,
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCANMap.html',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANMap.html')
-    
 print("Done!")
-
-

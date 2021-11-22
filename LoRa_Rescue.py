@@ -464,6 +464,18 @@ def trilaterateCircle(xCirc,yCirc,intersect,points):
     yTrilat = sum(y)/3
     return xTrilat,yTrilat
 
+def trilaterate(distanceAf,distanceBf,distanceCf,xg,yg):
+    A = -2*xg[0]+2*xg[1]
+    B = -2*yg[0]+2*yg[1]
+    C = distanceAf**2-distanceBf**2-xg[0]**2+xg[1]**2-yg[0]**2+yg[1]**2
+    D = -2*xg[1]+2*xg[2]
+    E = -2*yg[1]+2*yg[2]
+    F = distanceBf**2-distanceCf**2-xg[1]**2+xg[2]**2-yg[1]**2+yg[2]**2
+    x = (C*E-F*B)/(E*A-B*D)
+    y = (C*D-A*F)/(B*D-A*E)
+
+    return x,y
+
 def tolFilter(x,y,xAve,yAve,errorTolerance):
     i = 0
     while i != 50:
@@ -567,16 +579,23 @@ def errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data):
     for i in range(len(x)):
         compVact.append(np.sqrt((x[i]-xAct)**2+(y[i]-yAct)**2))
 
-    #K-means centroid vs. Average Point (dataset average)
+    # K-means centroid vs. Average Point (dataset average)
     centVave = np.sqrt((kmeans.cluster_centers_[:,0]-xAve)**2+(kmeans.cluster_centers_[:,1]-yAve)**2)
 
-    #Computed Position vs. K-means centroid
+    # Computed Position vs. K-means centroid
     compVcent = np.sqrt([(data[:,0]-kmeans.cluster_centers_[0,0])**2+(data[:,1]-kmeans.cluster_centers_[0,1])**2])
     for i in range(1,len(kmeans.cluster_centers_)):
         distance = np.sqrt([(data[:,0]-kmeans.cluster_centers_[i,0])**2+(data[:,1]-kmeans.cluster_centers_[i,1])**2])
         compVcent = np.append(compVcent,distance,axis=0)
 
-    return compVact, centVave, compVcent
+    # Compute Percent difference/improvement from old to new trilateration 
+    oldtriVact = distanceFormula(xOld,yOld,xAct,yAct)
+    oldtriVact = np.mean(oldtriVact)
+    newtriVact = distanceFormula(np.array([x]),np.array([y]),xAct,yAct)
+    newtriVact = np.mean(newtriVact)
+    triImprovement = abs((newtriVact - oldtriVact) / (oldtriVact))*100
+
+    return compVact, centVave, compVcent, triImprovement
 
 def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Initialize Firebase Storage
@@ -661,7 +680,7 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "15:41:48 09976500641")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:22:53 09976500625")
 
 # Compensation
 
@@ -717,8 +736,6 @@ CfAve = sum(distanceCf)/len(distanceCf)
 
 # Trilaterate Data
 print("Trilaterating Data...")
-# x,y = trilaterate(distanceAf,distanceBf,distanceCf,xg,yg)
-# xAve,yAve = trilaterate(AfAve,BfAve,CfAve,xg,yg)
 x = list()
 y = list()
 for i in range(len(distanceAf)):
@@ -732,6 +749,10 @@ for i in range(len(distanceAf)):
 xCircAve, yCircAve, inter = drawCircle(xg,yg,AfAve,BfAve,CfAve,points)
 xAve,yAve = trilaterateCircle(xCircAve,yCircAve,inter,points)
 print("Done Trilaterating!\n")
+
+# Old Trilateration
+xOld,yOld = trilaterate(distanceAf,distanceBf,distanceCf,xg,yg)
+xAveOld,yAveOld = trilaterate(AfAve,BfAve,CfAve,xg,yg)
 
 # print(x)
 # print(y)
@@ -830,7 +851,7 @@ fig += 1
 
 # Plot the data for trilateration
 plt.figure(fig)
-plt.scatter(x, y, label='Mobile Node Locations', cmap='brg', s=20)
+plt.scatter(x, y, label='Mobile Node Locations', c='blue', s=20)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
@@ -849,6 +870,102 @@ plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bbox_inches='tight')
 fig += 1
+
+# Plot New vs Old Trilateration Graph
+plt.figure(fig,figsize=(10,5))
+plt.scatter(xOld, yOld, label='Old Trilateration', c='red', s=20)
+plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='orange', s=20)
+plt.scatter(x, y, label='New Trilateration', c='blue', s=20)
+plt.scatter(xAve, yAve, label='New Trilateration Average', c='cyan', s=20)
+plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters:')
+plt.scatter([], [], marker=' ', label='n = '+str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+str(points))
+plt.grid(linewidth=1, color="w")
+ax = plt.gca()
+ax.set_facecolor('gainsboro')
+ax.set_axisbelow(True)
+plt.title(dtn + ' 0' + phoneA  + ' Old vs New Trilateration', y=1.05)
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' Old vs New Trilateration.jpg', bbox_inches='tight') 
+fig += 1
+
+# New vs Old Trilateration Plot Folium Mapping
+latDataOld, longDataOld = cartToGPS(xOld,yOld)
+latAveOld, longAveOld = cartToGPS(np.array([xAveOld]), np.array([yAveOld]))
+latData, longData = cartToGPS(x,y)
+latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
+latAct, longAct = cartToGPS(xAct, yAct)
+
+# Establish Folium Map
+m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
+
+# Add Old Trilateration
+for i in range(len(latDataOld)):
+    folium.Circle(
+        radius=1,
+        location=[latDataOld[i], longDataOld[i]],
+        tooltip='Old Trilateration',
+        popup=str(latDataOld[i])+','+str(longDataOld[i]),
+        color='red',
+        fill='True'
+    ).add_to(m)
+
+# Add Old Trilateration Average
+folium.Circle(
+    radius=1,
+    location=[latAveOld[0], longAveOld[0]],
+    tooltip='Old Trilateration Average',
+    popup=str(latAveOld[0])+','+str(longAveOld[0]),
+    color='orange',
+    fill='True'
+).add_to(m)
+
+# Add New Trilateration
+for i in range(len(latData)):
+    folium.Circle(
+        radius=1,
+        location=[latData[i], longData[i]],
+        tooltip='New Trilateration',
+        popup=str(latData[i])+','+str(longData[i]),
+        color='blue',
+        fill='True'
+    ).add_to(m)
+
+# Add New Trilateration Average
+folium.Circle(
+    radius=1,
+    location=[latAve[0], longAve[0]],
+    tooltip='New Trilateration Average',
+    popup=str(latAve[0])+','+str(longAve[0]),
+    color='lightblue',
+    fill='True'
+).add_to(m)
+
+# Add Actual Point
+folium.Marker(
+    location=[latAct[0], longAct[0]],
+    tooltip='Actual Point',
+    popup=str(latAct[0])+','+str(latAct[0]),
+    icon=folium.Icon(color='black', icon='star', prefix='fa'),
+).add_to(m)
+
+# Add GNode Locations
+for i in range(len(latg)):
+    folium.Marker(
+        location=[latg[i], longg[i]],
+        tooltip='GNode Locations',
+        popup=str(latg[i])+','+str(longg[i]),
+        icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
+    ).add_to(m)
+
+m.save(save_destination + dtn + ' 0' + phoneA + ' Old vs New Trilateration.html') 
 
 # K-Means
 print('Performing K-Means...')
@@ -885,8 +1002,8 @@ fig += 1
 plt.figure(fig)
 plt.scatter(data[:,0], data[:,1], label = 'Mobile Node Locations', c=kmeans.labels_, cmap='brg', s=5)
 plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker='x', label ='Cluster Centers', cmap='brg', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
 plt.scatter([], [], marker=' ', label='n = '+ str(n))
@@ -937,6 +1054,14 @@ for i in range(len(latCenter)):
         fill='True'
     ).add_to(m)
 
+# Add Actual Point
+folium.Marker(
+    location=[latAct[0], longAct[0]],
+    tooltip='Actual Point',
+    popup=str(latAct[0])+','+str(latAct[0]),
+    icon=folium.Icon(color='black', icon='star', prefix='fa'),
+).add_to(m)
+
 # Add GNode Locations
 for i in range(len(latg)):
     folium.Marker(
@@ -973,8 +1098,8 @@ fig += 1
 plt.figure(fig)
 plt.scatter(data[dbscan.labels_>-1,0], data[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
 plt.scatter(data[dbscan.labels_==-1,0], data[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
 plt.scatter([], [], marker=' ', label='n = '+ str(n))
@@ -1016,6 +1141,14 @@ for i in range(len(latData)):
         fill='True'
     ).add_to(m)
 
+# Add Actual Point
+folium.Marker(
+    location=[latAct[0], longAct[0]],
+    tooltip='Actual Point',
+    popup=str(latAct[0])+','+str(latAct[0]),
+    icon=folium.Icon(color='black', icon='star', prefix='fa'),
+).add_to(m)
+
 # Add GNode Locations
 for i in range(len(latg)):
     folium.Marker(
@@ -1030,10 +1163,17 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
 
 # Error Computations
 # Computed Position vs. Actual Position
-compVact, centVave, compVcent = errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
+compVact, centVave, compVcent, triImprovement = errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
 compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)
+
+# Update Old vs New Trilateration Graph
+plt.figure(4)
+plt.scatter([], [], marker = ' ', label=' ')
+plt.scatter([], [], marker=' ', label='% Improvement = '+ str("{:.4f}".format(triImprovement)) + "%")
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' Old vs New Trilateration.jpg', bbox_inches='tight') 
 
 # Plot the behavior of the error
 plt.figure(fig)
@@ -1210,6 +1350,9 @@ firebaseUpload(LoraRescueStorage,
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')    
 firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' Old vs New Trilateration.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/Old vs New Trilateration.jpg')
+firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
 firebaseUpload(LoraRescueStorage, 
@@ -1217,7 +1360,7 @@ firebaseUpload(LoraRescueStorage,
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/K-MeansMap.html')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansMap.html')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANElbow.jpg')
@@ -1226,7 +1369,7 @@ firebaseUpload(LoraRescueStorage,
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' DBSCANMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/DBSCANMap.html')
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANMap.html')
     
 print("Done!")
 

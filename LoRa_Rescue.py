@@ -685,9 +685,9 @@ rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase
 # Compensation
 
 # for i in range(len(rssiB)):
-#     rssiA[i] = str(int(int(rssiA[i]) - 8))
-#     rssiB[i] = str(int(int(rssiB[i]) - 13))
-#     rssiC[i] = str(int(int(rssiC[i]) - 7))
+#     rssiA[i] = str(int(int(rssiA[i])))
+#     rssiB[i] = str(int(int(rssiB[i]) + 15))
+#     rssiC[i] = str(int(int(rssiC[i])))
 
 ################### RSSI Kalman ######################
 

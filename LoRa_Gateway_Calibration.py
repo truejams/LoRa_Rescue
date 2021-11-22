@@ -150,12 +150,12 @@ def serialListener(port,baud):
             for i in range(3): ok[i] = 0
             ok[3], timePrev = checkDatabase(dateNow,timeNow,phone)
             timeNow = timePrev
-            rssiAlist = db.child(dateNow).child(timeNow).child("Calibration RSSI Values").child("RSSI Gateway A").get().val()
+            rssiAlist = db.child(dateNow + ' Calibration').child(timeNow).child("Calibration RSSI Values").child("RSSI Gateway A").get().val()
             if rssiAlist != None:
                 rssiAlist.append(temprssiA)
             else:
                 rssiAlist = [temprssiA]
-            db.child(dateNow).child(timeNow).child("Calibration RSSI Values").child("RSSI Gateway A").set(rssiAlist)
+            db.child(dateNow + ' Calibration').child(timeNow).child("Calibration RSSI Values").child("RSSI Gateway A").set(rssiAlist)
             
             if ok[3] == 1:
                 ok = [0,0,0,0]

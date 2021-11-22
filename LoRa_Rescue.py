@@ -23,9 +23,9 @@ from sklearn.neighbors import NearestNeighbors
 # Variable Declaration
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Benjamin's Directory
-save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
+# save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
 # save_destination = "C:\\LoRa_Rescue\\"
 
@@ -516,7 +516,7 @@ def dbscanOptimize(data, minPts):
     nNeighborDistance = np.sort(nNeighborDistance, axis=0)[:,1] # Sort by columns/x values
 
     # Determine optimal epsilon based on Elbow
-    dbElbow = KneeLocator(range(len(data)), nNeighborDistance, curve='convex', direction='increasing')
+    dbElbow = KneeLocator(range(len(data)), nNeighborDistance, curve='convex', direction='increasing', interp_method="polynomial")
 
     # Perform DBSCAN with epsilon elbow 
     dbscan = DBSCAN(eps=dbElbow.knee_y, min_samples=minPts).fit(data)
@@ -574,7 +574,7 @@ def cartToGPS(x,y):
 
     return lat, lon
 
-def errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data):
+def errorComp(x, y, xOld, yOld, xAct, yAct, kmeans, xAve, yAve, xAveOld, yAveOld, data):
     compVact = list()
     for i in range(len(x)):
         compVact.append(np.sqrt((x[i]-xAct)**2+(y[i]-yAct)**2))
@@ -588,12 +588,17 @@ def errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data):
         distance = np.sqrt([(data[:,0]-kmeans.cluster_centers_[i,0])**2+(data[:,1]-kmeans.cluster_centers_[i,1])**2])
         compVcent = np.append(compVcent,distance,axis=0)
 
-    # Compute Percent difference/improvement from old to new trilateration 
+    # Compute percentage increase/decrease from old to new trilateration 
+    # Using distance average
     oldtriVact = distanceFormula(xOld,yOld,xAct,yAct)
-    oldtriVact = np.mean(oldtriVact)
     newtriVact = distanceFormula(np.array([x]),np.array([y]),xAct,yAct)
+    # Using coordinate average
+    # oldtriVact = distanceFormula(xAveOld,yAveOld,xAct,yAct)
+    # newtriVact = distanceFormula(xAve,yAve,xAct,yAct)
+    # Percentage increase/decrease formula
+    oldtriVact = np.mean(oldtriVact)
     newtriVact = np.mean(newtriVact)
-    triImprovement = abs((newtriVact - oldtriVact) / (oldtriVact))*100
+    triImprovement = ((newtriVact - oldtriVact) / (oldtriVact))*-100
 
     return compVact, centVave, compVcent, triImprovement
 
@@ -680,13 +685,13 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:22:53 09976500625")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:17:57 09976500604")
 
 # Compensation
 
 # for i in range(len(rssiB)):
 #     rssiA[i] = str(int(int(rssiA[i])))
-#     rssiB[i] = str(int(int(rssiB[i]) + 15))
+#     rssiB[i] = str(int(int(rssiB[i]) + 7))
 #     rssiC[i] = str(int(int(rssiC[i])))
 
 ################### RSSI Kalman ######################
@@ -695,9 +700,9 @@ rssiA_int = [int(i) for i in rssiA]
 rssiB_int = [int(i) for i in rssiB]
 rssiC_int = [int(i) for i in rssiC]
 
-rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.005, R=1)
-rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.005, R=1)
-rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=0.005, R=1)
+rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.05, R=1)
+rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.05, R=1)
+rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=0.05, R=1)
 
 # Convert RSSI to Distance
 # distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
@@ -1159,7 +1164,7 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
 
 # Error Computations
 # Computed Position vs. Actual Position
-compVact, centVave, compVcent, triImprovement = errorComp(x, y, xAct, yAct, kmeans, xAve, yAve, data)
+compVact, centVave, compVcent, triImprovement = errorComp(x, y, xOld, yOld, xAct, yAct, kmeans, xAve, yAve, xAveOld, yAveOld, data)
 compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)

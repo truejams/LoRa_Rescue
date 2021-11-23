@@ -1190,11 +1190,11 @@ plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Old vs New Trilateration', y=1.05)
+plt.title(dtn + ' 0' + phoneA  + ' Old vs Improved Trilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' OldVNewTrilateration.jpg', bbox_inches='tight')
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg', bbox_inches='tight')
 fig += 1
 
 # Plot the behavior of the error
@@ -1376,8 +1376,8 @@ firebaseUpload(LoraRescueStorage,
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' OldVNewTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVNewTrilateration.jpg')   
+    dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')   
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')

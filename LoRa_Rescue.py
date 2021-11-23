@@ -898,13 +898,57 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RawTrilateration.jpg', bb
 plt.close()
 fig += 1
 
-# New vs Old Trilateration Plot Folium Mapping
+# Raw Trilateration Plot Folium Mapping
 latDataOld, longDataOld = cartToGPS(xOld,yOld)
 latAveOld, longAveOld = cartToGPS(np.array([xAveOld]), np.array([yAveOld]))
 latData, longData = cartToGPS(x,y)
 latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
 latAct, longAct = cartToGPS(xAct, yAct)
 
+# Establish Folium Map
+m = folium.Map(location=[latAct[0], longAct[0]], zoom_start=20)
+
+# Add New Trilateration
+for i in range(len(latData)):
+    folium.Circle(
+        radius=1,
+        location=[latData[i], longData[i]],
+        tooltip='New Trilateration',
+        popup=str(latData[i])+','+str(longData[i]),
+        color='blue',
+        fill='True'
+    ).add_to(m)
+
+# Add New Trilateration Average
+folium.Circle(
+    radius=1,
+    location=[latAve[0], longAve[0]],
+    tooltip='Average Point',
+    popup=str(latAve[0])+','+str(longAve[0]),
+    color='lightblue',
+    fill='True'
+).add_to(m)
+
+# Add Actual Point
+folium.Marker(
+    location=[latAct[0], longAct[0]],
+    tooltip='Actual Point',
+    popup=str(latAct[0])+','+str(latAct[0]),
+    icon=folium.Icon(color='black', icon='star', prefix='fa'),
+).add_to(m)
+
+# Add GNode Locations
+for i in range(len(latg)):
+    folium.Marker(
+        location=[latg[i], longg[i]],
+        tooltip='GNode Locations',
+        popup=str(latg[i])+','+str(longg[i]),
+        icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
+    ).add_to(m)
+
+m.save(save_destination + dtn + ' 0' + phoneA + ' Trilateration.html')
+
+# New vs Old Trilateration Plot Folium Mapping
 # Establish Folium Map
 m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
 
@@ -967,7 +1011,7 @@ for i in range(len(latg)):
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
 
-m.save(save_destination + dtn + ' 0' + phoneA + ' Old vs New Trilateration.html') 
+m.save(save_destination + dtn + ' 0' + phoneA + ' Old vs Improved Trilateration.html') 
 
 # K-Means
 print('Performing K-Means...')
@@ -1377,7 +1421,13 @@ firebaseUpload(LoraRescueStorage,
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')   
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' Old vs Improved Trilateration.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/Old vs Improved Trilateration.html') 
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' Trilateration.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/Trilateration.html') 
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')

@@ -25,9 +25,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -370,7 +370,7 @@ def importDatabase(date, phoneTime):
 def rssiToDist(rssi,n,dro,roRSSI):
     dist = list()
     for i in range(len(rssi)):
-        dist.append(pow(10,((roRSSI-int(rssi[i]))/(10*n)))*dro)
+        dist.append(pow(10,((roRSSI-float(rssi[i]))/(10*n)))*dro)
 
     return dist
 
@@ -689,10 +689,9 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:18:51 09976500624")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:06:34 09976500621")
 
 # Compensation
-
 for i in range(len(rssiB)):
     rssiA[i] = str(int(int(rssiA[i]) - 11))
     rssiB[i] = str(int(int(rssiB[i])))

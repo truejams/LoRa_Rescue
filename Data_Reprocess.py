@@ -1,3 +1,5 @@
+# ORIGINAL CODE MADE BY GREG
+
 # Import Libraries
 from sklearn.cluster import KMeans
 import numpy as np
@@ -370,7 +372,7 @@ def importDatabase(date, phoneTime):
 def rssiToDist(rssi,n,dro,roRSSI):
     dist = list()
     for i in range(len(rssi)):
-        dist.append(pow(10,((roRSSI-int(rssi[i]))/(10*n)))*dro)
+        dist.append(pow(10,((roRSSI-float(rssi[i]))/(10*n)))*dro)
 
     return dist
 

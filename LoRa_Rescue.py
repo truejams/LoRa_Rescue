@@ -517,7 +517,10 @@ def dbscanOptimize(data, minPts, k):
     nNeighborDistance = np.sort(nNeighborDistance, axis=0)[:,1] # Sort by columns/x values
 
     # Determine optimal epsilon based on Elbow
-    dbElbow = KneeLocator(range(len(data)), nNeighborDistance, curve='convex', direction='increasing')
+    dbElbow = KneeLocator(range(len(data)), nNeighborDistance, curve='convex', direction='increasing', online=True)
+
+    if dbElbow.knee_y == 0:
+        dbElbow.knee_y = 10**-3
 
     # Perform DBSCAN with epsilon elbow 
     dbscan = DBSCAN(eps=dbElbow.knee_y, min_samples=minPts).fit(data)
@@ -686,14 +689,14 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:29:00 09976500606")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:18:51 09976500624")
 
 # Compensation
 
 for i in range(len(rssiB)):
-    rssiA[i] = str(int(int(rssiA[i]) - 5))
+    rssiA[i] = str(int(int(rssiA[i]) - 11))
     rssiB[i] = str(int(int(rssiB[i])))
-    rssiC[i] = str(int(int(rssiC[i]) - 0))
+    rssiC[i] = str(int(int(rssiC[i]) - 4))
 
 ################### RSSI Kalman ######################
 
@@ -933,7 +936,7 @@ folium.Circle(
 folium.Marker(
     location=[latAct[0], longAct[0]],
     tooltip='Actual Point',
-    popup=str(latAct[0])+','+str(latAct[0]),
+    popup=str(latAct[0])+','+str(longAct[0]),
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
@@ -946,7 +949,7 @@ for i in range(len(latg)):
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
 
-m.save(save_destination + dtn + ' 0' + phoneA + ' Trilateration.html')
+m.save(save_destination + dtn + ' 0' + phoneA + ' RawTrilaterationMap.html')
 
 # New vs Old Trilateration Plot Folium Mapping
 # Establish Folium Map
@@ -998,7 +1001,7 @@ folium.Circle(
 folium.Marker(
     location=[latAct[0], longAct[0]],
     tooltip='Actual Point',
-    popup=str(latAct[0])+','+str(latAct[0]),
+    popup=str(latAct[0])+','+str(longAct[0]),
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
@@ -1011,7 +1014,7 @@ for i in range(len(latg)):
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
 
-m.save(save_destination + dtn + ' 0' + phoneA + ' Old vs Improved Trilateration.html') 
+m.save(save_destination + dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html') 
 
 # K-Means
 print('Performing K-Means...')
@@ -1104,7 +1107,7 @@ for i in range(len(latCenter)):
 folium.Marker(
     location=[latAct[0], longAct[0]],
     tooltip='Actual Point',
-    popup=str(latAct[0])+','+str(latAct[0]),
+    popup=str(latAct[0])+','+str(longAct[0]),
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
@@ -1123,7 +1126,11 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
 # DBSCAN
 print('Performing DBSCAN...')
 
-dbscan, nNeighborDistance, dbElbow = dbscanOptimize(data, minPts, kNeighbors)
+dbData = np.array([[xFilt[0],yFilt[0]]])
+for i in range(1,len(xFilt)):
+    dbData = np.append(dbData,[[xFilt[i],yFilt[i]]], axis=0)
+
+dbscan, nNeighborDistance, dbElbow = dbscanOptimize(dbData, minPts, kNeighbors)
 print('Optimal Value for Epsilon is', dbElbow.knee_y)
 print('MinPts required for each cluster is', minPts)
 
@@ -1131,7 +1138,7 @@ print('DBSCAN Done!\n')
 
 # DBSCAN Elbow Plot
 plt.figure(fig)
-plt.plot(range(0,len(data)), nNeighborDistance)
+plt.plot(range(0,len(dbData)), nNeighborDistance)
 plt.plot(dbElbow.knee, dbElbow.knee_y, 'ro', label='Optimal ε: ' + str("{:.4f}".format(dbElbow.knee_y)))
 plt.xlabel('Nearest Neighbor Distance Index No.')
 plt.ylabel('Distance from Nearest Neighbor [Meters]')
@@ -1142,8 +1149,8 @@ fig += 1
     
 # DBSCAN Plot
 plt.figure(fig)
-plt.scatter(data[dbscan.labels_>-1,0], data[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
-plt.scatter(data[dbscan.labels_==-1,0], data[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
+plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
+plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
@@ -1169,7 +1176,7 @@ fig += 1
 # DBSCAN Plot Folium Mapping
 
 # Cartesian to GPS Coordinate Conversion
-latData, longData = cartToGPS(data[dbscan.labels_>-1,0],data[dbscan.labels_>-1,1])
+latData, longData = cartToGPS(dbData[dbscan.labels_>-1,0],dbData[dbscan.labels_>-1,1])
 latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
 latAct, longAct = cartToGPS(xAct, yAct)
 
@@ -1191,7 +1198,7 @@ for i in range(len(latData)):
 folium.Marker(
     location=[latAct[0], longAct[0]],
     tooltip='Actual Point',
-    popup=str(latAct[0])+','+str(latAct[0]),
+    popup=str(latAct[0])+','+str(longAct[0]),
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
@@ -1420,14 +1427,14 @@ firebaseUpload(LoraRescueStorage,
     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilaterationMap.html') 
+firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')
 firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' Old vs Improved Trilateration.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/Old vs Improved Trilateration.html') 
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' Trilateration.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/Trilateration.html') 
+    dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilaterationMap.html') 
 firebaseUpload(LoraRescueStorage, 
     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')

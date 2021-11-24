@@ -514,6 +514,7 @@ def kmeansOptimize(data):
 
 def dbscanOptimize(data, minPts, k):
     # Determine distances of each point to their nearest neighbor
+
     nNeighbor = NearestNeighbors(n_neighbors=k).fit(data) # reference point is included in n_neighbors
     nNeighborDistance, nNeighborIndices = nNeighbor.kneighbors(data)
     nNeighborDistance = np.sort(nNeighborDistance, axis=0)[:,1] # Sort by columns/x values
@@ -533,7 +534,7 @@ def dbscanOptimize(data, minPts, k):
     if dbElbow.knee_y == 0:
         dbElbow.knee_y = 10**-3
 
-    # Perform DBSCAN with epsilon elbow 
+    # Perform DBSCAN with epsilon elbow
     dbscan = DBSCAN(eps=dbElbow.knee_y, min_samples=minPts).fit(data)
 
     return dbscan, nNeighborDistance, dbElbow
@@ -711,7 +712,7 @@ with open(save_destination+'Average Error.csv', mode='a') as clogs:
 
 for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
     # if z1 == "2021-11-13": # UNCOMMENT THIS FOR 2ND RUN
-    if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-07" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
+    if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
         firebase = pyrebase.initialize_app(LoraRescueStorage)
         db = firebase.database()
         databaseEntries = db.child(z1).get()

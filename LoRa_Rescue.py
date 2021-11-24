@@ -25,9 +25,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -702,7 +702,6 @@ def kalman_filter(signal, A, H, Q, R):
 rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:06:34 09976500621")
 
 # Compensation
-
 for i in range(len(rssiB)):
     rssiA[i] = str(int(int(rssiA[i]) - 11))
     rssiB[i] = str(int(int(rssiB[i])))

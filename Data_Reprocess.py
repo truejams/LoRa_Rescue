@@ -521,6 +521,15 @@ def dbscanOptimize(data, minPts, k):
     # Determine optimal epsilon based on Elbow
     dbElbow = KneeLocator(range(len(data)), nNeighborDistance, curve='convex', direction='increasing')
 
+    # In extreme cases where no elbow is found, delete duplicate data and recalculate
+    if dbElbow.knee_y == None:
+        dataUnique = np.unique(data,axis=0)
+        nNeighbor = NearestNeighbors(n_neighbors=k).fit(dataUnique) # reference point is included in n_neighbors
+        nNeighborDistance, nNeighborIndices = nNeighbor.kneighbors(dataUnique)
+        nNeighborDistance = np.sort(nNeighborDistance, axis=0)[:,1] # Sort by columns/x values
+        # Determine optimal epsilon based on Elbow
+        dbElbow = KneeLocator(range(len(dataUnique)), nNeighborDistance, curve='convex', direction='increasing')
+
     if dbElbow.knee_y == 0:
         dbElbow.knee_y = 10**-3
 

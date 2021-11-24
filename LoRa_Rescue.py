@@ -853,17 +853,20 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bb
 plt.close()
 fig += 1
 
-# Plot the behavior of the RSSI
+# Plot the behavior of the RSSI Kalman and Raw
 plt.figure(fig)
-plt.plot(rssiA_kalman, 'r', label='GNode A RSSI')
-plt.plot(rssiB_kalman, 'g', label='GNode B RSSI')
-plt.plot(rssiC_kalman, 'b', label='GNode C RSSI')
-rssiAAve = sum(rssiA_kalman)/len(rssiA_kalman)
-rssiBAve = sum(rssiB_kalman)/len(rssiB_kalman)
-rssiCAve = sum(rssiC_kalman)/len(rssiC_kalman)
-plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAve, 'r.', label='Average GNode A RSSI')
-plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAve, 'g.', label='Average GNode B RSSI')
-plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAve, 'b.', label='Average GNode C RSSI')
+plt.plot(rssiA_kalman, 'r', label='GNode A RSSI w/ Kalman')
+plt.plot(rssiB_kalman, 'g', label='GNode B RSSI w/ Kalman')
+plt.plot(rssiC_kalman, 'b', label='GNode C RSSI w/ Kalman')
+plt.plot(rssiA_int, 'r', alpha=0.3, label='GNode A RSSI')
+plt.plot(rssiB_int, 'g', alpha=0.3, label='GNode B RSSI')
+plt.plot(rssiC_int, 'b', alpha=0.3, label='GNode C RSSI')
+rssiAAveK = sum(rssiA_kalman)/len(rssiA_kalman)
+rssiBAveK = sum(rssiB_kalman)/len(rssiB_kalman)
+rssiCAveK = sum(rssiC_kalman)/len(rssiC_kalman)
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAveK, 'r.', alpha=1, markersize = 0.8, label='Average GNode A RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAveK, 'g.', alpha=1, markersize = 0.8, label='Average GNode B RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAveK, 'b.', alpha=1, markersize = 0.8, label='Average GNode C RSSI')
 plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='n = '+str(n))

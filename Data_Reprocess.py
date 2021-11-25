@@ -1444,4 +1444,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             firebaseUpload(LoraRescueStorage, 
                 dtn + ' 0' + phoneA + ' DBSCANMap.html',
                 'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCANMap.html')
+            firebaseUpload(LoraRescueStorage, 
+                dtn + ' 0' + phoneA + ' K-MeansMap.html',
+                'LoRa Rescue Data/' + 'Output/' + dtn[0:10] + ' ' + dtn[11:19] + ' 0' + phoneA + '.html')
             print("Done!")

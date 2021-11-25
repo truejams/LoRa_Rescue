@@ -1177,17 +1177,11 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             # K-Means
             print('Performing K-Means...')
-            # K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
-            if len(xFilt)<2:
-                print("K-means clustering can't be performed due to lack of sample coordinates")
-                quit()
 
-            # Create numpy array 'data' for K-means containing (xFilt,yFilt) coordinates
-            data = np.array([[xFilt[0],yFilt[0]]])
-            for i in range(1,len(xFilt)):
-                data = np.append(data,[[xFilt[i],yFilt[i]]], axis=0)
+            # Create numpy array 'data' for K-means containing non-noise coordinates from DBSCAN
+            data = dbData[dbscan.labels_>-1]
 
-            # Mobile Node Duplicate Coordinates Filter for K-means Convergence
+            # Mobile Node Duplicate Coordinates Filter for faster K-means Convergence
             data = np.unique(data, axis=0) #Eliminate Duplicates in data
 
             kmeans,inertia,elbow = kmeansOptimize(data)

@@ -514,6 +514,7 @@ def kmeansOptimize(data):
 
 def dbscanOptimize(data, minPts, k):
     # Determine distances of each point to their nearest neighbor
+
     nNeighbor = NearestNeighbors(n_neighbors=k).fit(data) # reference point is included in n_neighbors
     nNeighborDistance, nNeighborIndices = nNeighbor.kneighbors(data)
     nNeighborDistance = np.sort(nNeighborDistance, axis=0)[:,1] # Sort by columns/x values
@@ -533,7 +534,7 @@ def dbscanOptimize(data, minPts, k):
     if dbElbow.knee_y == 0:
         dbElbow.knee_y = 10**-3
 
-    # Perform DBSCAN with epsilon elbow 
+    # Perform DBSCAN with epsilon elbow
     dbscan = DBSCAN(eps=dbElbow.knee_y, min_samples=minPts).fit(data)
 
     return dbscan, nNeighborDistance, dbElbow
@@ -711,7 +712,7 @@ with open(save_destination+'Average Error.csv', mode='a') as clogs:
 
 for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
     # if z1 == "2021-11-13": # UNCOMMENT THIS FOR 2ND RUN
-    if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-07" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
+    if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
         firebase = pyrebase.initialize_app(LoraRescueStorage)
         db = firebase.database()
         databaseEntries = db.child(z1).get()
@@ -911,17 +912,20 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             plt.close()
             fig += 1
 
-            # Plot the behavior of the RSSI
+            # Plot the behavior of the RSSI Kalman and Raw
             plt.figure(fig)
-            plt.plot(rssiA_kalman, 'r', label='GNode A RSSI')
-            plt.plot(rssiB_kalman, 'g', label='GNode B RSSI')
-            plt.plot(rssiC_kalman, 'b', label='GNode C RSSI')
-            rssiAAve = sum(rssiA_kalman)/len(rssiA_kalman)
-            rssiBAve = sum(rssiB_kalman)/len(rssiB_kalman)
-            rssiCAve = sum(rssiC_kalman)/len(rssiC_kalman)
-            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAve, 'r.', label='Average GNode A RSSI')
-            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAve, 'g.', label='Average GNode B RSSI')
-            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAve, 'b.', label='Average GNode C RSSI')
+            plt.plot(rssiA_kalman, 'r', label='GNode A RSSI w/ Kalman')
+            plt.plot(rssiB_kalman, 'g', label='GNode B RSSI w/ Kalman')
+            plt.plot(rssiC_kalman, 'b', label='GNode C RSSI w/ Kalman')
+            plt.plot(rssiA_int, 'r', alpha=0.3, label='GNode A RSSI')
+            plt.plot(rssiB_int, 'g', alpha=0.3, label='GNode B RSSI')
+            plt.plot(rssiC_int, 'b', alpha=0.3, label='GNode C RSSI')
+            rssiAAveK = sum(rssiA_kalman)/len(rssiA_kalman)
+            rssiBAveK = sum(rssiB_kalman)/len(rssiB_kalman)
+            rssiCAveK = sum(rssiC_kalman)/len(rssiC_kalman)
+            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAveK, 'r.', alpha=1, markersize = 0.8, label='Average GNode A RSSI')
+            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAveK, 'g.', alpha=1, markersize = 0.8, label='Average GNode B RSSI')
+            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAveK, 'b.', alpha=1, markersize = 0.8, label='Average GNode C RSSI')
             plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.plot([], [], ' ', label='Parameters:')
             plt.plot([], [], ' ', label='n = '+str(n))

@@ -1342,7 +1342,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             diffCf = CfAve - comp_distanceCf
             with open(save_destination+'Average Error.csv', mode='a') as clogs:
                 clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
-                clogswrite.writerow([dtn,'0'+phoneA,str("{:.4f}".format(compVactAve[0])),str("{:.4f}".format(compVactMax[0])),str("{:.4f}".format(compVactMin[0])),diffAf,diffBf,diffCf])
+                clogswrite.writerow([dtn,'0'+phoneA,str("{:.4f}".format(compVactAve[0])),str("{:.4f}".format(compVactMax[0])),str("{:.4f}".format(compVactMin[0])),diffAf,diffBf,diffCf,triImprovement[0]])
 
             # Firebase Realtime Database
             print('Uploading to LoRa Rescue Realtime Database...')

@@ -18,6 +18,7 @@ import os
 import pyrebase
 from sklearn.cluster import DBSCAN
 import json
+from sklearn.metrics.pairwise import haversine_distances
 from sklearn.neighbors import NearestNeighbors
 
 # Variable Declaration
@@ -588,28 +589,36 @@ def cartToGPS(x,y):
 
     return lat, lon
 
-def errorComp(x, y, xOld, yOld, xAct, yAct, kmeans, xAve, yAve, xAveOld, yAveOld, data):
+def errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct, longAct, kmeans):
+    # Convert Cartesian to GPS Coordinates
+    lat, long = cartToGPS(x,y)
+    latAve, longAve = cartToGPS(np.array([xAve]),np.array([yAve]))
+    latOld, longOld = cartToGPS(xOld,yOld)
+    latAveOld, longAveOld = cartToGPS(np.array([xAveOld]),np.array([yAveOld]))
+    latKClusters, longKClusters = cartToGPS(kmeans.cluster_centers_[:,0],kmeans.cluster_centers_[:,1])
+
+    # Computed Coordinates vs Actual Point
     compVact = list()
-    for i in range(len(x)):
-        compVact.append(np.sqrt((x[i]-xAct)**2+(y[i]-yAct)**2))
+    for i in range(len(lat)):
+        compVact.append(haversine(lat[i],long[i],latAct[0],longAct[0]))
 
     # K-means centroid vs. Average Point (dataset average)
-    centVave = np.sqrt((kmeans.cluster_centers_[:,0]-xAve)**2+(kmeans.cluster_centers_[:,1]-yAve)**2)
+    centVave = list()
+    for i in range(len(latKClusters)):
+        centVave.append(haversine(latKClusters[i],longKClusters[i],latAve[0],longAve[0]))
 
-    # Computed Position vs. K-means centroid
-    compVcent = np.sqrt([(data[:,0]-kmeans.cluster_centers_[0,0])**2+(data[:,1]-kmeans.cluster_centers_[0,1])**2])
-    for i in range(1,len(kmeans.cluster_centers_)):
-        distance = np.sqrt([(data[:,0]-kmeans.cluster_centers_[i,0])**2+(data[:,1]-kmeans.cluster_centers_[i,1])**2])
-        compVcent = np.append(compVcent,distance,axis=0)
+    # Computed Coordinates vs. K-means centroid
+    compVcent = list()
+    for i in range(len(latKClusters)):
+        for k in range(len(lat)):
+            compVcent.append(haversine(latKClusters[i],longKClusters[i],lat[k],long[k]))
 
     # Compute percentage increase/decrease from old to new trilateration 
     # Using distance average
-    oldtriVact = distanceFormula(xOld,yOld,xAct,yAct)
-    newtriVact = distanceFormula(np.array([x]),np.array([y]),xAct,yAct)
-    # Using coordinate average
-    # oldtriVact = distanceFormula(xAveOld,yAveOld,xAct,yAct)
-    # newtriVact = distanceFormula(xAve,yAve,xAct,yAct)
-    # Percentage increase/decrease formula
+    oldtriVact = list()
+    for i in range(len(latOld)):
+        oldtriVact.append(haversine(latOld[i],longOld[i],latAct[0],longAct[0]))
+    newtriVact = compVact
     oldtriVact = np.mean(oldtriVact)
     newtriVact = np.mean(newtriVact)
     triImprovement = ((newtriVact - oldtriVact) / (oldtriVact))*-100
@@ -699,13 +708,13 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-06", "17:06:34 09976500621")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:23:51 09976500605")
 
 # Compensation
 for i in range(len(rssiB)):
-    rssiA[i] = str(int(int(rssiA[i]) - 11))
+    rssiA[i] = str(int(int(rssiA[i]) - 6))
     rssiB[i] = str(int(int(rssiB[i])))
-    rssiC[i] = str(int(int(rssiC[i]) - 4))
+    rssiC[i] = str(int(int(rssiC[i])))
 
 ################### RSSI Kalman ######################
 
@@ -1222,7 +1231,7 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
 
 # Error Computations
 # Computed Position vs. Actual Position
-compVact, centVave, compVcent, triImprovement = errorComp(x, y, xOld, yOld, xAct, yAct, kmeans, xAve, yAve, xAveOld, yAveOld, data)
+compVact, centVave, compVcent, triImprovement = errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct, longAct, kmeans)
 compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)

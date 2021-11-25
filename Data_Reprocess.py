@@ -755,8 +755,11 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                     rssiA[i] = str(int(int(rssiA[i]) - 6))
                     rssiB[i] = str(int(int(rssiB[i])))
                     rssiC[i] = str(int(int(rssiC[i])))
-            
-
+            elif z1 == "2021-11-13":
+                for i in range(len(rssiB)):
+                    rssiA[i] = str(int(int(rssiA[i]) - 4))
+                    rssiB[i] = str(int(int(rssiB[i]) - 1))
+                    rssiC[i] = str(int(int(rssiC[i])))      
 
             ################### RSSI Kalman ######################
 
@@ -944,7 +947,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             plt.figure(fig)
             plt.scatter(x, y, label='Mobile Node Locations', c='blue', s=20)
             plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-            plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
+            plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=20)
             plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.scatter([], [], marker=' ', label='Parameters:')
             plt.scatter([], [], marker=' ', label='n = '+str(n))
@@ -1002,11 +1005,11 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                 icon=folium.Icon(color='black', icon='star', prefix='fa'),
             ).add_to(m)
 
-            # Add GNode Locations
+            # Add Gateway Locations
             for i in range(len(latg)):
                 folium.Marker(
                     location=[latg[i], longg[i]],
-                    tooltip='GNode Locations',
+                    tooltip='Gateway Locations',
                     popup=str(latg[i])+','+str(longg[i]),
                     icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
                 ).add_to(m)
@@ -1028,7 +1031,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                 folium.Circle(
                     radius=1,
                     location=[latDataOld[i], longDataOld[i]],
-                    tooltip='Old Trilateration',
+                    tooltip='Standard Trilateration',
                     popup=str(latDataOld[i])+','+str(longDataOld[i]),
                     color='red',
                     fill='True'
@@ -1038,7 +1041,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             folium.Circle(
                 radius=1,
                 location=[latAveOld[0], longAveOld[0]],
-                tooltip='Old Trilateration Average',
+                tooltip='Standard Trilateration Average',
                 popup=str(latAveOld[0])+','+str(longAveOld[0]),
                 color='orange',
                 fill='True'
@@ -1073,11 +1076,11 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                 icon=folium.Icon(color='black', icon='star', prefix='fa'),
             ).add_to(m)
 
-            # Add GNode Locations
+            # Add Gateway Locations
             for i in range(len(latg)):
                 folium.Marker(
                     location=[latg[i], longg[i]],
-                    tooltip='GNode Locations',
+                    tooltip='Gateway Locations',
                     popup=str(latg[i])+','+str(longg[i]),
                     icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
                 ).add_to(m)
@@ -1113,7 +1116,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
             plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
             plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-            plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+            plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
             plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.scatter([], [], marker=' ', label='Parameters: ')
             plt.scatter([], [], marker=' ', label='n = '+ str(n))
@@ -1163,11 +1166,11 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                 icon=folium.Icon(color='black', icon='star', prefix='fa'),
             ).add_to(m)
 
-            # Add GNode Locations
+            # Add Gateway Locations
             for i in range(len(latg)):
                 folium.Marker(
                     location=[latg[i], longg[i]],
-                    tooltip='GNode Locations',
+                    tooltip='Gateway Locations',
                     popup=str(latg[i])+','+str(longg[i]),
                     icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
                 ).add_to(m)
@@ -1205,7 +1208,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             plt.scatter(data[:,0], data[:,1], label = 'Mobile Node Locations', c=kmeans.labels_, cmap='brg', s=5)
             plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker='x', label ='Cluster Centers', cmap='brg', s=30)
             plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-            plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+            plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
             plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.scatter([], [], marker=' ', label='Parameters: ')
             plt.scatter([], [], marker=' ', label='n = '+ str(n))
@@ -1264,11 +1267,11 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                 icon=folium.Icon(color='black', icon='star', prefix='fa'),
             ).add_to(m)
 
-            # Add GNode Locations
+            # Add Gateway Locations
             for i in range(len(latg)):
                 folium.Marker(
                     location=[latg[i], longg[i]],
-                    tooltip='GNode Locations',
+                    tooltip='Gateway Locations',
                     popup=str(latg[i])+','+str(longg[i]),
                     icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
                 ).add_to(m)
@@ -1285,12 +1288,12 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             # Plot Old vs Trilateration Trilateration Graph
             plt.figure(fig,figsize=(10,5))
-            plt.scatter(xOld, yOld, label='Old Trilateration', c='red', s=20)
-            plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='orange', s=20)
+            plt.scatter(xOld, yOld, label='Standard Trilateration', c='red', s=20)
+            plt.scatter(xAveOld, yAveOld, label='Standard Trilateration Average', c='orange', s=20)
             plt.scatter(x, y, label='Improved Trilateration', c='blue', s=20)
             plt.scatter(xAve, yAve, label='Improved Trilateration Average', c='cyan', s=20)
             plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-            plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+            plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
             plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.scatter([], [], marker=' ', label='Parameters:')
             plt.scatter([], [], marker=' ', label='n = '+str(n))
@@ -1303,7 +1306,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             ax = plt.gca()
             ax.set_facecolor('gainsboro')
             ax.set_axisbelow(True)
-            plt.title(dtn + ' 0' + phoneA  + ' Old vs Improved Trilateration', y=1.05)
+            plt.title(dtn + ' 0' + phoneA  + ' Standard vs Improved Trilateration', y=1.05)
             plt.xlabel('x-axis [Meters]')
             plt.ylabel('y-axis [Meters]')
             plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))

@@ -26,9 +26,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -708,13 +708,13 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:23:51 09976500605")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:43:57 09976500623")
 
 # Compensation
 for i in range(len(rssiB)):
-    rssiA[i] = str(int(int(rssiA[i]) - 6))
+    rssiA[i] = str(int(int(rssiA[i]) - 4))
     rssiB[i] = str(int(int(rssiB[i])))
-    rssiC[i] = str(int(int(rssiC[i])))
+    rssiC[i] = str(int(int(rssiC[i]) + 6))
 
 ################### RSSI Kalman ######################
 

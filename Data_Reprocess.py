@@ -30,7 +30,7 @@ from sklearn.neighbors import NearestNeighbors
 # Ianny's Directory
 # save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\11-25-21_Tests\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)

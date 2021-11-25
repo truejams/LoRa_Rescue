@@ -615,6 +615,11 @@ def errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct
         for k in range(len(lat)):
             compVcent.append(haversine(latKClusters[i],longKClusters[i],lat[k],long[k]))
 
+    # K-means centroid vs. Actual Point
+    centVact = list()
+    for i in range(len(latKClusters)):
+        centVact.append(haversine(latKClusters[i],longKClusters[i],latAct[0],longAct[0]))
+
     # Compute percentage increase/decrease from old to new trilateration 
     # Using distance average
     oldtriVact = list()
@@ -625,7 +630,7 @@ def errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct
     newtriVact = np.mean(newtriVact)
     triImprovement = ((newtriVact - oldtriVact) / (oldtriVact))*-100
 
-    return compVact, centVave, compVcent, triImprovement
+    return compVact, centVave, compVcent, centVact, triImprovement
 
 def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Initialize Firebase Storage
@@ -1281,7 +1286,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             # Error Computations
             # Computed Position vs. Actual Position
-            compVact, centVave, compVcent, triImprovement = errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct, longAct, kmeans)
+            compVact, centVave, compVcent, centVact, triImprovement = errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct, longAct, kmeans)
             compVactAve = sum(compVact)/len(compVact)
             compVactMax = max(compVact)
             compVactMin = min(compVact)
@@ -1355,9 +1360,12 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                     "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
                     "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
                     "Optimal Number of Clusters":int(elbow.knee)}
+            for i in range(len(centVact)):
+                centVact[i] = centVact[i].tolist()
             dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
                     "Actual Computed Distances from Gateways (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
-                    "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
+                    "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact],
+                    "Centroid vs Actual Coordinates":centVact}
             dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
                     "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
             dataDistances = {"Distance to Gateway A":list(distanceAf),
@@ -1380,22 +1388,22 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             for i in range(len(centVave)):
                 centVave[i] = centVave[i].tolist()
 
-            dataKmeans = {"Intertia":list(inertia),
+            dataKmeans = {"Inertia":list(inertia),
                     "Centroid X":list(clusterCenterX),
                     "Centroid Y":list(clusterCenterY),
-                    "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
-                    "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)
+                    "Centroids vs Mean Coordinates":list(centVave),
+                    "Centroids vs Coordinates":list(clusterCompVcent)
                     }
 
             dateAndTime = dtn.split()
             dateNow = dateAndTime[0]
             timeNow = dateAndTime[1].replace("-",":")
-            # db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
-            # db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
-            # db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
-            # db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
-            # db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
-            # db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
+            db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
+            db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
+            db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
+            db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
+            db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
+            db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
             # # Firebase Storage
             # print('Uploading to LoRa Rescue Storage...\n')

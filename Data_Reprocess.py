@@ -1083,6 +1083,97 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             m.save(save_destination + dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html') 
 
+            # DBSCAN
+            print('Performing DBSCAN...')
+
+            dbData = np.array([[xFilt[0],yFilt[0]]])
+            for i in range(1,len(xFilt)):
+                dbData = np.append(dbData,[[xFilt[i],yFilt[i]]], axis=0)
+
+            dbscan, nNeighborDistance, dbElbow = dbscanOptimize(dbData, minPts, kNeighbors)
+            print('Optimal Value for Epsilon is', dbElbow.knee_y)
+            print('MinPts required for each cluster is', minPts)
+
+            print('DBSCAN Done!\n')
+
+            # DBSCAN Elbow Plot
+            plt.figure(fig)
+            plt.plot(range(0,len(nNeighborDistance)), nNeighborDistance)
+            plt.plot(dbElbow.knee, dbElbow.knee_y, 'ro', label='Optimal ε: ' + str("{:.4f}".format(dbElbow.knee_y)))
+            plt.xlabel('Nearest Neighbor Distance Index No.')
+            plt.ylabel('Distance from Nearest Neighbor [Meters]')
+            plt.title(dtn + ' 0' + phoneA  + ' DBSCAN Elbow')
+            plt.legend() 
+            plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCANElbow.jpg') #Change Directory Accordingly
+            fig += 1
+                
+            # DBSCAN Plot
+            plt.figure(fig)
+            plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
+            plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
+            plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+            plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+            plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+            plt.scatter([], [], marker=' ', label='Parameters: ')
+            plt.scatter([], [], marker=' ', label='n = '+ str(n))
+            plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+ str(dro))
+            plt.scatter([], [], marker=' ', label='$RSSI_o = $'+ str(roRSSI))
+            plt.scatter([], [], marker=' ', label='Circle Points = '+ str(points))
+            plt.scatter([], [], marker=' ', label='ε  = '+ str("{:.4f}".format(dbElbow.knee_y)))
+            plt.scatter([], [], marker=' ', label='MinPts  = '+ str(minPts))
+            plt.scatter([], [], marker=' ', label='No. of Clusters  = '+ str(max(dbscan.labels_)+1))
+            plt.grid(linewidth=1, color="w")
+            ax = plt.gca()
+            ax.set_facecolor('gainsboro')
+            ax.set_axisbelow(True)
+            plt.xlabel('x-axis [Meters]')
+            plt.ylabel('y-axis [Meters]')
+            plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
+            plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+            plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
+            fig += 1
+
+            # DBSCAN Plot Folium Mapping
+
+            # Cartesian to GPS Coordinate Conversion
+            latData, longData = cartToGPS(dbData[dbscan.labels_>-1,0],dbData[dbscan.labels_>-1,1])
+            latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
+            latAct, longAct = cartToGPS(xAct, yAct)
+
+            # Establish Folium Map
+            m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
+
+            # Add Mobile Node Locations to Folium Map
+            for i in range(len(latData)):
+                folium.Circle(
+                    radius=1,
+                    location=[latData[i], longData[i]],
+                    tooltip='Mobile Node Locations',
+                    popup=str(latData[i])+','+str(longData[i]),
+                    color='red',
+                    fill='True'
+                ).add_to(m)
+
+            # Add Actual Point
+            folium.Marker(
+                location=[latAct[0], longAct[0]],
+                tooltip='Actual Point',
+                popup=str(latAct[0])+','+str(longAct[0]),
+                icon=folium.Icon(color='black', icon='star', prefix='fa'),
+            ).add_to(m)
+
+            # Add GNode Locations
+            for i in range(len(latg)):
+                folium.Marker(
+                    location=[latg[i], longg[i]],
+                    tooltip='GNode Locations',
+                    popup=str(latg[i])+','+str(longg[i]),
+                    icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
+                ).add_to(m)
+
+            # Save HTML Map File
+            m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
+
             # K-Means
             print('Performing K-Means...')
             # K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
@@ -1189,97 +1280,6 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             # Save HTML Map File
             m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
-
-            # DBSCAN
-            print('Performing DBSCAN...')
-
-            dbData = np.array([[xFilt[0],yFilt[0]]])
-            for i in range(1,len(xFilt)):
-                dbData = np.append(dbData,[[xFilt[i],yFilt[i]]], axis=0)
-
-            dbscan, nNeighborDistance, dbElbow = dbscanOptimize(dbData, minPts, kNeighbors)
-            print('Optimal Value for Epsilon is', dbElbow.knee_y)
-            print('MinPts required for each cluster is', minPts)
-
-            print('DBSCAN Done!\n')
-
-            # DBSCAN Elbow Plot
-            plt.figure(fig)
-            plt.plot(range(0,len(dbData)), nNeighborDistance)
-            plt.plot(dbElbow.knee, dbElbow.knee_y, 'ro', label='Optimal ε: ' + str("{:.4f}".format(dbElbow.knee_y)))
-            plt.xlabel('Nearest Neighbor Distance Index No.')
-            plt.ylabel('Distance from Nearest Neighbor [Meters]')
-            plt.title(dtn + ' 0' + phoneA  + ' DBSCAN Elbow')
-            plt.legend() 
-            plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCANElbow.jpg') #Change Directory Accordingly
-            fig += 1
-                
-            # DBSCAN Plot
-            plt.figure(fig)
-            plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
-            plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
-            plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-            plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
-            plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
-            plt.scatter([], [], marker=' ', label='Parameters: ')
-            plt.scatter([], [], marker=' ', label='n = '+ str(n))
-            plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+ str(dro))
-            plt.scatter([], [], marker=' ', label='$RSSI_o = $'+ str(roRSSI))
-            plt.scatter([], [], marker=' ', label='Circle Points = '+ str(points))
-            plt.scatter([], [], marker=' ', label='ε  = '+ str("{:.4f}".format(dbElbow.knee_y)))
-            plt.scatter([], [], marker=' ', label='MinPts  = '+ str(minPts))
-            plt.scatter([], [], marker=' ', label='No. of Clusters  = '+ str(max(dbscan.labels_)+1))
-            plt.grid(linewidth=1, color="w")
-            ax = plt.gca()
-            ax.set_facecolor('gainsboro')
-            ax.set_axisbelow(True)
-            plt.xlabel('x-axis [Meters]')
-            plt.ylabel('y-axis [Meters]')
-            plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
-            plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
-            plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
-            fig += 1
-
-            # DBSCAN Plot Folium Mapping
-
-            # Cartesian to GPS Coordinate Conversion
-            latData, longData = cartToGPS(dbData[dbscan.labels_>-1,0],dbData[dbscan.labels_>-1,1])
-            latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
-            latAct, longAct = cartToGPS(xAct, yAct)
-
-            # Establish Folium Map
-            m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
-
-            # Add Mobile Node Locations to Folium Map
-            for i in range(len(latData)):
-                folium.Circle(
-                    radius=1,
-                    location=[latData[i], longData[i]],
-                    tooltip='Mobile Node Locations',
-                    popup=str(latData[i])+','+str(longData[i]),
-                    color='red',
-                    fill='True'
-                ).add_to(m)
-
-            # Add Actual Point
-            folium.Marker(
-                location=[latAct[0], longAct[0]],
-                tooltip='Actual Point',
-                popup=str(latAct[0])+','+str(longAct[0]),
-                icon=folium.Icon(color='black', icon='star', prefix='fa'),
-            ).add_to(m)
-
-            # Add GNode Locations
-            for i in range(len(latg)):
-                folium.Marker(
-                    location=[latg[i], longg[i]],
-                    tooltip='GNode Locations',
-                    popup=str(latg[i])+','+str(longg[i]),
-                    icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
-                ).add_to(m)
-
-            # Save HTML Map File
-            m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
 
             # Error Computations
             # Computed Position vs. Actual Position

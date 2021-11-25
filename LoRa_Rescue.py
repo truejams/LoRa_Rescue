@@ -800,6 +800,7 @@ comp_distanceBf = haversine(latAct[0], longAct[0], latg[1], longg[1])
 comp_distanceCf = haversine(latAct[0], longAct[0], latg[2], longg[2])
 
 # Plot the data frequency of the gateways
+fig = 1 
 plt.figure(fig)
 distSeriesA = pd.Series(distanceAf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
 distSeriesA.columns = ['Distance [Meters]','Frequency']

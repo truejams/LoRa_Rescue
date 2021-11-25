@@ -745,7 +745,7 @@ for i in range(len(distanceAf)):
     distanceAf[i] = float(distanceAf[i])
     distanceBf[i] = float(distanceBf[i])
     distanceCf[i] = float(distanceCf[i])
-# Convert Distances from each GNode to numpy arrays
+# Convert Distances from each Gateway to numpy arrays
 distanceAf = np.array(distanceAf)
 distanceBf = np.array(distanceBf)
 distanceCf = np.array(distanceCf)
@@ -788,7 +788,7 @@ yFilt = y
 xFiltAve = np.mean(xFilt)
 yFiltAve = np.mean(yFilt)
 
-# Compute actual distances of GNodes to mobile node
+# Compute actual distances of Gateways to mobile node
 ################## CHANGE THIS ACCORDINGLY ##################  
 # Use distance formula
 # comp_distanceAf = distanceFormula(xAct, yAct, xg[0], yg[0])
@@ -800,7 +800,6 @@ comp_distanceBf = haversine(latAct[0], longAct[0], latg[1], longg[1])
 comp_distanceCf = haversine(latAct[0], longAct[0], latg[2], longg[2])
 
 # Plot the data frequency of the gateways
-fig = 1
 plt.figure(fig)
 distSeriesA = pd.Series(distanceAf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
 distSeriesA.columns = ['Distance [Meters]','Frequency']
@@ -812,7 +811,7 @@ distSeriesC = pd.Series(distanceCf).value_counts().reset_index().sort_values('in
 distSeriesC.columns = ['Distance [Meters]','Frequency']
 distSeriesC['Distance [Meters]'] = distSeriesC['Distance [Meters]'].round()
 figur, axes = plt.subplots(1,3, figsize=(18, 5))
-axes[0].set_title(dtn + ' 0' + phoneA  + ' GNode A FD')
+axes[0].set_title(dtn + ' 0' + phoneA  + ' Gateway A FD')
 plots = sns.barplot(ax=axes[0],x="Distance [Meters]", y="Frequency", data=distSeriesA)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
@@ -821,7 +820,7 @@ for bar in plots.patches:
                     size=9, xytext=(0, 8),
                     textcoords='offset points')
 
-axes[1].set_title(dtn + ' 0' + phoneA  + ' GNode B FD')
+axes[1].set_title(dtn + ' 0' + phoneA  + ' Gateway B FD')
 plots = sns.barplot(ax=axes[1],x="Distance [Meters]", y="Frequency", data=distSeriesB)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
@@ -830,7 +829,7 @@ for bar in plots.patches:
                     size=9, xytext=(0, 8),
                     textcoords='offset points')
 
-axes[2].set_title(dtn + ' 0' + phoneA  + ' GNode C FD')
+axes[2].set_title(dtn + ' 0' + phoneA  + ' Gateway C FD')
 plots = sns.barplot(ax=axes[2],x="Distance [Meters]", y="Frequency", data=distSeriesC)
 for bar in plots.patches:
     plots.annotate(format(bar.get_height(), '.1f'), 
@@ -850,22 +849,22 @@ plt.close()
 
 # Plot the behavior of the distance
 plt.figure(fig)
-plt.plot(distanceAf, 'r', label='GNode A Distances')
-plt.plot(distanceBf, 'g', label='GNode B Distances')
-plt.plot(distanceCf, 'b', label='GNode C Distances')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*AfAve, 'r.', markersize = 0.8, label='Average GNode A Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*BfAve, 'g.', markersize = 0.8, label='Average GNode B Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*CfAve, 'b.', markersize = 0.8, label='Average GNode C Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual GNode B Distance')
-plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual GNode C Distance')
+plt.plot(distanceAf, 'r', label='Gateway A Distances')
+plt.plot(distanceBf, 'g', label='Gateway B Distances')
+plt.plot(distanceCf, 'b', label='Gateway C Distances')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*AfAve, 'r.', markersize = 0.8, label='Average Gateway A Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*BfAve, 'g.', markersize = 0.8, label='Average Gateway B Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*CfAve, 'b.', markersize = 0.8, label='Average Gateway C Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual Gateway A Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual Gateway B Distance')
+plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual Gateway C Distance')
 plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='n = '+str(n))
 plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
 plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
 plt.title(dtn + ' 0' + phoneA  + ' Distance Behavior')
-plt.xlabel('RSSI Datapoint')
+plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DistanceBehavior.jpg', bbox_inches='tight')
@@ -874,25 +873,25 @@ fig += 1
 
 # Plot the behavior of the RSSI Kalman and Raw
 plt.figure(fig)
-plt.plot(rssiA_kalman, 'r', label='GNode A RSSI w/ Kalman')
-plt.plot(rssiB_kalman, 'g', label='GNode B RSSI w/ Kalman')
-plt.plot(rssiC_kalman, 'b', label='GNode C RSSI w/ Kalman')
-plt.plot(rssiA_int, 'r', alpha=0.3, label='GNode A RSSI')
-plt.plot(rssiB_int, 'g', alpha=0.3, label='GNode B RSSI')
-plt.plot(rssiC_int, 'b', alpha=0.3, label='GNode C RSSI')
+plt.plot(rssiA_kalman, 'r', label='Gateway A RSSI w/ Kalman')
+plt.plot(rssiB_kalman, 'g', label='Gateway B RSSI w/ Kalman')
+plt.plot(rssiC_kalman, 'b', label='Gateway C RSSI w/ Kalman')
+plt.plot(rssiA_int, 'r', alpha=0.3, label='Gateway A RSSI')
+plt.plot(rssiB_int, 'g', alpha=0.3, label='Gateway B RSSI')
+plt.plot(rssiC_int, 'b', alpha=0.3, label='Gateway C RSSI')
 rssiAAveK = sum(rssiA_kalman)/len(rssiA_kalman)
 rssiBAveK = sum(rssiB_kalman)/len(rssiB_kalman)
 rssiCAveK = sum(rssiC_kalman)/len(rssiC_kalman)
-plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAveK, 'r.', alpha=1, markersize = 0.8, label='Average GNode A RSSI')
-plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAveK, 'g.', alpha=1, markersize = 0.8, label='Average GNode B RSSI')
-plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAveK, 'b.', alpha=1, markersize = 0.8, label='Average GNode C RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAveK, 'r.', alpha=1, markersize = 0.8, label='Average Gateway A RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAveK, 'g.', alpha=1, markersize = 0.8, label='Average Gateway B RSSI')
+plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAveK, 'b.', alpha=1, markersize = 0.8, label='Average Gateway C RSSI')
 plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='n = '+str(n))
 plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
 plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
 plt.title(dtn + ' 0' + phoneA  + ' RSSI Behavior')
-plt.xlabel('RSSI Datapoint')
+plt.xlabel('Datapoint')
 plt.ylabel('dBm')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' RSSIBehavior.jpg', bbox_inches='tight')
@@ -903,7 +902,7 @@ fig += 1
 plt.figure(fig)
 plt.scatter(x, y, label='Mobile Node Locations', c='blue', s=20)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=20)
+plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=20)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters:')
 plt.scatter([], [], marker=' ', label='n = '+str(n))
@@ -914,7 +913,7 @@ plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Raw Trilateration', y=1.05)
+plt.title(dtn + ' 0' + phoneA  + ' Improved Trilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
@@ -961,11 +960,11 @@ folium.Marker(
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
-# Add GNode Locations
+# Add Gateway Locations
 for i in range(len(latg)):
     folium.Marker(
         location=[latg[i], longg[i]],
-        tooltip='GNode Locations',
+        tooltip='Gateway Locations',
         popup=str(latg[i])+','+str(longg[i]),
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
@@ -973,6 +972,12 @@ for i in range(len(latg)):
 m.save(save_destination + dtn + ' 0' + phoneA + ' RawTrilaterationMap.html')
 
 # Old vs Improved Trilateration Plot Folium Mapping
+latDataOld, longDataOld = cartToGPS(xOld,yOld)
+latAveOld, longAveOld = cartToGPS(np.array([xAveOld]), np.array([yAveOld]))
+latData, longData = cartToGPS(x,y)
+latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
+latAct, longAct = cartToGPS(xAct, yAct)
+
 # Establish Folium Map
 m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
 
@@ -981,7 +986,7 @@ for i in range(len(latDataOld)):
     folium.Circle(
         radius=1,
         location=[latDataOld[i], longDataOld[i]],
-        tooltip='Old Trilateration',
+        tooltip='Standard Trilateration',
         popup=str(latDataOld[i])+','+str(longDataOld[i]),
         color='red',
         fill='True'
@@ -991,28 +996,28 @@ for i in range(len(latDataOld)):
 folium.Circle(
     radius=1,
     location=[latAveOld[0], longAveOld[0]],
-    tooltip='Old Trilateration Average',
+    tooltip='Standard Trilateration Average',
     popup=str(latAveOld[0])+','+str(longAveOld[0]),
     color='orange',
     fill='True'
 ).add_to(m)
 
-# Add New Trilateration
+# Add Improved Trilateration
 for i in range(len(latData)):
     folium.Circle(
         radius=1,
         location=[latData[i], longData[i]],
-        tooltip='New Trilateration',
+        tooltip='Improved Trilateration',
         popup=str(latData[i])+','+str(longData[i]),
         color='blue',
         fill='True'
     ).add_to(m)
 
-# Add New Trilateration Average
+# Add Improved Trilateration Average
 folium.Circle(
     radius=1,
     location=[latAve[0], longAve[0]],
-    tooltip='New Trilateration Average',
+    tooltip='Improved Trilateration Average',
     popup=str(latAve[0])+','+str(longAve[0]),
     color='lightblue',
     fill='True'
@@ -1026,11 +1031,11 @@ folium.Marker(
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
-# Add GNode Locations
+# Add Gateway Locations
 for i in range(len(latg)):
     folium.Marker(
         location=[latg[i], longg[i]],
-        tooltip='GNode Locations',
+        tooltip='Gateway Locations',
         popup=str(latg[i])+','+str(longg[i]),
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
@@ -1066,7 +1071,7 @@ plt.figure(fig)
 plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
 plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
 plt.scatter([], [], marker=' ', label='n = '+ str(n))
@@ -1116,11 +1121,11 @@ folium.Marker(
     icon=folium.Icon(color='black', icon='star', prefix='fa'),
 ).add_to(m)
 
-# Add GNode Locations
+# Add Gateway Locations
 for i in range(len(latg)):
     folium.Marker(
         location=[latg[i], longg[i]],
-        tooltip='GNode Locations',
+        tooltip='Gateway Locations',
         popup=str(latg[i])+','+str(longg[i]),
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
@@ -1158,7 +1163,7 @@ plt.figure(fig)
 plt.scatter(data[:,0], data[:,1], label = 'Mobile Node Locations', c=kmeans.labels_, cmap='brg', s=5)
 plt.scatter(kmeans.cluster_centers_[:,0], kmeans.cluster_centers_[:,1], c=list(range(1,elbow.knee+1)), marker='x', label ='Cluster Centers', cmap='brg', s=30)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters: ')
 plt.scatter([], [], marker=' ', label='n = '+ str(n))
@@ -1209,19 +1214,11 @@ for i in range(len(latCenter)):
         fill='True'
     ).add_to(m)
 
-# Add Actual Point
-folium.Marker(
-    location=[latAct[0], longAct[0]],
-    tooltip='Actual Point',
-    popup=str(latAct[0])+','+str(longAct[0]),
-    icon=folium.Icon(color='black', icon='star', prefix='fa'),
-).add_to(m)
-
-# Add GNode Locations
+# Add Gateway Locations
 for i in range(len(latg)):
     folium.Marker(
         location=[latg[i], longg[i]],
-        tooltip='GNode Locations',
+        tooltip='Gateway Locations',
         popup=str(latg[i])+','+str(longg[i]),
         icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
     ).add_to(m)
@@ -1236,14 +1233,14 @@ compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)
 
-# Plot Old vs Improved Trilateration
+# Plot Old vs Trilateration Trilateration Graph
 plt.figure(fig,figsize=(10,5))
-plt.scatter(xOld, yOld, label='Old Trilateration', c='red', s=20)
-plt.scatter(xAveOld, yAveOld, label='Old Trilateration Average', c='orange', s=20)
+plt.scatter(xOld, yOld, label='Standard Trilateration', c='red', s=20)
+plt.scatter(xAveOld, yAveOld, label='Standard Trilateration Average', c='orange', s=20)
 plt.scatter(x, y, label='Improved Trilateration', c='blue', s=20)
 plt.scatter(xAve, yAve, label='Improved Trilateration Average', c='cyan', s=20)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.scatter([], [], marker=' ', label='Parameters:')
 plt.scatter([], [], marker=' ', label='n = '+str(n))
@@ -1256,7 +1253,7 @@ plt.grid(linewidth=1, color="w")
 ax = plt.gca()
 ax.set_facecolor('gainsboro')
 ax.set_axisbelow(True)
-plt.title(dtn + ' 0' + phoneA  + ' Old vs Improved Trilateration', y=1.05)
+plt.title(dtn + ' 0' + phoneA  + ' Standard vs Improved Trilateration', y=1.05)
 plt.xlabel('x-axis [Meters]')
 plt.ylabel('y-axis [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
@@ -1267,7 +1264,7 @@ fig += 1
 plt.figure(fig)
 plt.plot(compVact, 'r', label='Trilateration Error')
 plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*compVactAve , 'r--', label='Average Error')
-# plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
+# plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual Gateway A Distance')
 plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
 plt.plot([], [], ' ', label='Parameters:')
 plt.plot([], [], ' ', label='n = '+str(n))
@@ -1374,98 +1371,101 @@ fig += 1
 #         klogswrite.writerow([''])
 #         klogswrite.writerow([''])
 
-# # Firebase Realtime Database
-# print('Uploading to LoRa Rescue Realtime Database...')
-# firebase = pyrebase.initialize_app(LoraRescueStorage)
-# db = firebase.database()
-# dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
-#         "GNode B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
-#         "GNode C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
-#         "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
-#         "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
-#         "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
-#         "Optimal Number of Clusters":int(elbow.knee)}
-# dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
-#         "Actual Computed Distances from Gnodes (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
-#         "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
-# dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
-#         "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
-# dataDistances = {"Distance to GNode A":list(distanceAf),
-#         "Distance to GNode B":list(distanceBf),
-#         "Distance to GNode C":list(distanceCf)}
-# dataDistanceCalc = {"n":n,
-#         "dro":dro,
-#         "roRSSI":roRSSI,
-#         "Circumference Points":points}
+# Firebase Realtime Database
+print('Uploading to LoRa Rescue Realtime Database...')
+firebase = pyrebase.initialize_app(LoraRescueStorage)
+db = firebase.database()
+dataBasic = {"Gateway A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
+        "Gateway B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
+        "Gateway C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
+        "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
+        "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
+        "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
+        "Optimal Number of Clusters":int(elbow.knee)}
+dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
+        "Actual Computed Distances from Gateways (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
+        "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
+dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
+        "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
+dataDistances = {"Distance to Gateway A":list(distanceAf),
+        "Distance to Gateway B":list(distanceBf),
+        "Distance to Gateway C":list(distanceCf)}
+dataDistanceCalc = {"n":n,
+        "dro":dro,
+        "roRSSI":roRSSI,
+        "Circumference Points":points}
 
-# clusterCenterX = list()
-# clusterCenterY = list()
-# clusterCompVcent = list()
-# for i in range(elbow.knee):
-#         clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
-#         clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
-# for i in range(len(compVcent)):    
-#         for j in range (len(compVcent[i])):
-#                 clusterCompVcent.append(compVcent[i][j])
+clusterCenterX = list()
+clusterCenterY = list()
+clusterCompVcent = list()
+for i in range(elbow.knee):
+        clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
+        clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
+for i in range(len(compVcent)):    
+        for j in range (len(compVcent[i])):
+                clusterCompVcent.append(compVcent[i][j])            
+for i in range(len(centVave)):
+    centVave[i] = centVave[i].tolist()
 
-# dataKmeans = {"Intertia":list(inertia),
-#         "Centroid X":list(clusterCenterX),
-#         "Centroid Y":list(clusterCenterY),
-#         "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
-#         "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)}
+dataKmeans = {"Intertia":list(inertia),
+        "Centroid X":list(clusterCenterX),
+        "Centroid Y":list(clusterCenterY),
+        "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
+        "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)
+        }
 
-# dateAndTime = dtn.split()
-# dateNow = dateAndTime[0]
-# timeNow = dateAndTime[1].replace("-",":")
-# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
-# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
-# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
-# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
-# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
-# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
+dateAndTime = dtn.split()
+dateNow = dateAndTime[0]
+timeNow = dateAndTime[1].replace("-",":")
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
+db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
-# # Firebase Storage
-# print('Uploading to LoRa Rescue Storage...\n')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/RSSIBehavior.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/ErrorBehavior.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilaterationMap.html') 
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilaterationMap.html') 
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' K-Means.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' K-MeansMap.html',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansMap.html')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANElbow.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
-# firebaseUpload(LoraRescueStorage, 
-#     dtn + ' 0' + phoneA + ' DBSCANMap.html',
-#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANMap.html')
-# print("Done!")
+# Firebase Storage
+print('Uploading to LoRa Rescue Storage...\n')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/RSSIBehavior.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/ErrorBehavior.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilaterationMap.html') 
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilaterationMap.html')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' K-Means.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' K-MeansMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansMap.html')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANElbow.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DBSCAN.jpg',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
+firebaseUpload(LoraRescueStorage, 
+    dtn + ' 0' + phoneA + ' DBSCANMap.html',
+    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANMap.html')
+print("Done!")

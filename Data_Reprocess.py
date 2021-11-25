@@ -68,13 +68,13 @@ dro = 1
 roRSSI = -30
 
 # Trilateration calculation constants
-# GNode GPS Coordinates
+# Gateway GPS Coordinates
 # Format: A B C
 ################## CHANGE THIS ACCORDINGLY ##################  
 latg = np.array([14.6651047,14.6671611,14.6664435])
 longg = np.array([120.9720628,120.9695632,120.9704663])
 
-# GNode Cartesian Coordinates
+# Gateway Cartesian Coordinates
 # Format: A B C
 xg = np.array([0,0,0])
 yg = np.array([0,0,0])
@@ -366,8 +366,8 @@ def importDatabase(date, phoneTime):
     longg = np.array([float(gnodeA[1]),float(gnodeB[1]),float(gnodeC[1])])
     latg,longg = cartToGPS(latg,longg)
     phone = phone[1:]
-    print('GNode Latitudes: ' + str(latg))
-    print('GNode Longitudes: '+ str(longg))
+    print('Gateway  Latitudes: ' + str(latg))
+    print('Gateway  Longitudes: '+ str(longg))
     return rssiA, rssiB, rssiC, dtn, phone, latg, longg, latAct, longAct
 
 def rssiToDist(rssi,n,dro,roRSSI):
@@ -790,7 +790,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                 distanceAf[i] = float(distanceAf[i])
                 distanceBf[i] = float(distanceBf[i])
                 distanceCf[i] = float(distanceCf[i])
-            # Convert Distances from each GNode to numpy arrays
+            # Convert Distances from each Gateway to numpy arrays
             distanceAf = np.array(distanceAf)
             distanceBf = np.array(distanceBf)
             distanceCf = np.array(distanceCf)
@@ -833,7 +833,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             xFiltAve = np.mean(xFilt)
             yFiltAve = np.mean(yFilt)
 
-            # Compute actual distances of GNodes to mobile node
+            # Compute actual distances of Gateways to mobile node
             ################## CHANGE THIS ACCORDINGLY ##################  
             # Use distance formula
             # comp_distanceAf = distanceFormula(xAct, yAct, xg[0], yg[0])
@@ -856,7 +856,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             distSeriesC.columns = ['Distance [Meters]','Frequency']
             distSeriesC['Distance [Meters]'] = distSeriesC['Distance [Meters]'].round()
             figur, axes = plt.subplots(1,3, figsize=(18, 5))
-            axes[0].set_title(dtn + ' 0' + phoneA  + ' GNode A FD')
+            axes[0].set_title(dtn + ' 0' + phoneA  + ' Gateway A FD')
             plots = sns.barplot(ax=axes[0],x="Distance [Meters]", y="Frequency", data=distSeriesA)
             for bar in plots.patches:
                 plots.annotate(format(bar.get_height(), '.1f'), 
@@ -865,7 +865,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                                 size=9, xytext=(0, 8),
                                 textcoords='offset points')
 
-            axes[1].set_title(dtn + ' 0' + phoneA  + ' GNode B FD')
+            axes[1].set_title(dtn + ' 0' + phoneA  + ' Gateway B FD')
             plots = sns.barplot(ax=axes[1],x="Distance [Meters]", y="Frequency", data=distSeriesB)
             for bar in plots.patches:
                 plots.annotate(format(bar.get_height(), '.1f'), 
@@ -874,7 +874,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                                 size=9, xytext=(0, 8),
                                 textcoords='offset points')
 
-            axes[2].set_title(dtn + ' 0' + phoneA  + ' GNode C FD')
+            axes[2].set_title(dtn + ' 0' + phoneA  + ' Gateway C FD')
             plots = sns.barplot(ax=axes[2],x="Distance [Meters]", y="Frequency", data=distSeriesC)
             for bar in plots.patches:
                 plots.annotate(format(bar.get_height(), '.1f'), 
@@ -894,15 +894,15 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             # Plot the behavior of the distance
             plt.figure(fig)
-            plt.plot(distanceAf, 'r', label='GNode A Distances')
-            plt.plot(distanceBf, 'g', label='GNode B Distances')
-            plt.plot(distanceCf, 'b', label='GNode C Distances')
-            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*AfAve, 'r.', markersize = 0.8, label='Average GNode A Distance')
-            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*BfAve, 'g.', markersize = 0.8, label='Average GNode B Distance')
-            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*CfAve, 'b.', markersize = 0.8, label='Average GNode C Distance')
-            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
-            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual GNode B Distance')
-            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual GNode C Distance')
+            plt.plot(distanceAf, 'r', label='Gateway A Distances')
+            plt.plot(distanceBf, 'g', label='Gateway B Distances')
+            plt.plot(distanceCf, 'b', label='Gateway C Distances')
+            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*AfAve, 'r.', markersize = 0.8, label='Average Gateway A Distance')
+            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*BfAve, 'g.', markersize = 0.8, label='Average Gateway B Distance')
+            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*CfAve, 'b.', markersize = 0.8, label='Average Gateway C Distance')
+            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual Gateway A Distance')
+            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceBf, 'g--', label='Actual Gateway B Distance')
+            plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceCf, 'b--', label='Actual Gateway C Distance')
             plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.plot([], [], ' ', label='Parameters:')
             plt.plot([], [], ' ', label='n = '+str(n))
@@ -918,18 +918,18 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
 
             # Plot the behavior of the RSSI Kalman and Raw
             plt.figure(fig)
-            plt.plot(rssiA_kalman, 'r', label='GNode A RSSI w/ Kalman')
-            plt.plot(rssiB_kalman, 'g', label='GNode B RSSI w/ Kalman')
-            plt.plot(rssiC_kalman, 'b', label='GNode C RSSI w/ Kalman')
-            plt.plot(rssiA_int, 'r', alpha=0.3, label='GNode A RSSI')
-            plt.plot(rssiB_int, 'g', alpha=0.3, label='GNode B RSSI')
-            plt.plot(rssiC_int, 'b', alpha=0.3, label='GNode C RSSI')
+            plt.plot(rssiA_kalman, 'r', label='Gateway A RSSI w/ Kalman')
+            plt.plot(rssiB_kalman, 'g', label='Gateway B RSSI w/ Kalman')
+            plt.plot(rssiC_kalman, 'b', label='Gateway C RSSI w/ Kalman')
+            plt.plot(rssiA_int, 'r', alpha=0.3, label='Gateway A RSSI')
+            plt.plot(rssiB_int, 'g', alpha=0.3, label='Gateway B RSSI')
+            plt.plot(rssiC_int, 'b', alpha=0.3, label='Gateway C RSSI')
             rssiAAveK = sum(rssiA_kalman)/len(rssiA_kalman)
             rssiBAveK = sum(rssiB_kalman)/len(rssiB_kalman)
             rssiCAveK = sum(rssiC_kalman)/len(rssiC_kalman)
-            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAveK, 'r.', alpha=1, markersize = 0.8, label='Average GNode A RSSI')
-            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAveK, 'g.', alpha=1, markersize = 0.8, label='Average GNode B RSSI')
-            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAveK, 'b.', alpha=1, markersize = 0.8, label='Average GNode C RSSI')
+            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiAAveK, 'r.', alpha=1, markersize = 0.8, label='Average Gateway A RSSI')
+            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiBAveK, 'g.', alpha=1, markersize = 0.8, label='Average Gateway B RSSI')
+            plt.plot(np.arange(len(rssiA_kalman)),np.ones([1,len(rssiA_kalman)])[0]*rssiCAveK, 'b.', alpha=1, markersize = 0.8, label='Average Gateway C RSSI')
             plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.plot([], [], ' ', label='Parameters:')
             plt.plot([], [], ' ', label='n = '+str(n))
@@ -1317,7 +1317,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             plt.figure(fig)
             plt.plot(compVact, 'r', label='Trilateration Error')
             plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*compVactAve , 'r--', label='Average Error')
-            # plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual GNode A Distance')
+            # plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual Gateway A Distance')
             plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
             plt.plot([], [], ' ', label='Parameters:')
             plt.plot([], [], ' ', label='n = '+str(n))
@@ -1348,21 +1348,21 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             print('Uploading to LoRa Rescue Realtime Database...')
             firebase = pyrebase.initialize_app(LoraRescueStorage)
             db = firebase.database()
-            dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
-                    "GNode B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
-                    "GNode C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
+            dataBasic = {"Gateway A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
+                    "Gateway B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
+                    "Gateway C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
                     "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
                     "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
                     "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
                     "Optimal Number of Clusters":int(elbow.knee)}
             dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
-                    "Actual Computed Distances from Gnodes (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
+                    "Actual Computed Distances from Gateways (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
                     "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
             dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
                     "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
-            dataDistances = {"Distance to GNode A":list(distanceAf),
-                    "Distance to GNode B":list(distanceBf),
-                    "Distance to GNode C":list(distanceCf)}
+            dataDistances = {"Distance to Gateway A":list(distanceAf),
+                    "Distance to Gateway B":list(distanceBf),
+                    "Distance to Gateway C":list(distanceCf)}
             dataDistanceCalc = {"n":n,
                     "dro":dro,
                     "roRSSI":roRSSI,

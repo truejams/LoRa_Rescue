@@ -25,9 +25,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\"
+# save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -1028,19 +1028,104 @@ for i in range(len(latg)):
 
 m.save(save_destination + dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html') 
 
+# DBSCAN
+print('Performing DBSCAN...')
+
+dbData = np.array([[xFilt[0],yFilt[0]]])
+for i in range(1,len(xFilt)):
+    dbData = np.append(dbData,[[xFilt[i],yFilt[i]]], axis=0)
+
+dbscan, nNeighborDistance, dbElbow = dbscanOptimize(dbData, minPts, kNeighbors)
+print('Optimal Value for Epsilon is', dbElbow.knee_y)
+print('MinPts required for each cluster is', minPts)
+
+print('DBSCAN Done!\n')
+
+# DBSCAN Elbow Plot
+plt.figure(fig)
+plt.plot(range(0,len(nNeighborDistance)), nNeighborDistance)
+plt.plot(dbElbow.knee, dbElbow.knee_y, 'ro', label='Optimal ε: ' + str("{:.4f}".format(dbElbow.knee_y)))
+plt.xlabel('Nearest Neighbor Distance Index No.')
+plt.ylabel('Distance from Nearest Neighbor [Meters]')
+plt.title(dtn + ' 0' + phoneA  + ' DBSCAN Elbow')
+plt.legend() 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCANElbow.jpg') #Change Directory Accordingly
+fig += 1
+    
+# DBSCAN Plot
+plt.figure(fig)
+plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
+plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
+plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
+plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
+plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.scatter([], [], marker=' ', label='Parameters: ')
+plt.scatter([], [], marker=' ', label='n = '+ str(n))
+plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+ str(dro))
+plt.scatter([], [], marker=' ', label='$RSSI_o = $'+ str(roRSSI))
+plt.scatter([], [], marker=' ', label='Circle Points = '+ str(points))
+plt.scatter([], [], marker=' ', label='ε  = '+ str("{:.4f}".format(dbElbow.knee_y)))
+plt.scatter([], [], marker=' ', label='MinPts  = '+ str(minPts))
+plt.scatter([], [], marker=' ', label='No. of Clusters  = '+ str(max(dbscan.labels_)+1))
+plt.grid(linewidth=1, color="w")
+ax = plt.gca()
+ax.set_facecolor('gainsboro')
+ax.set_axisbelow(True)
+plt.xlabel('x-axis [Meters]')
+plt.ylabel('y-axis [Meters]')
+plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
+fig += 1
+
+# DBSCAN Plot Folium Mapping
+
+# Cartesian to GPS Coordinate Conversion
+latData, longData = cartToGPS(dbData[dbscan.labels_>-1,0],dbData[dbscan.labels_>-1,1])
+latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
+latAct, longAct = cartToGPS(xAct, yAct)
+
+# Establish Folium Map
+m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
+
+# Add Mobile Node Locations to Folium Map
+for i in range(len(latData)):
+    folium.Circle(
+        radius=1,
+        location=[latData[i], longData[i]],
+        tooltip='Mobile Node Locations',
+        popup=str(latData[i])+','+str(longData[i]),
+        color='red',
+        fill='True'
+    ).add_to(m)
+
+# Add Actual Point
+folium.Marker(
+    location=[latAct[0], longAct[0]],
+    tooltip='Actual Point',
+    popup=str(latAct[0])+','+str(longAct[0]),
+    icon=folium.Icon(color='black', icon='star', prefix='fa'),
+).add_to(m)
+
+# Add GNode Locations
+for i in range(len(latg)):
+    folium.Marker(
+        location=[latg[i], longg[i]],
+        tooltip='GNode Locations',
+        popup=str(latg[i])+','+str(longg[i]),
+        icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
+    ).add_to(m)
+
+# Save HTML Map File
+m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
+
 # K-Means
 print('Performing K-Means...')
-# K-means Clustering won't be performed if there is only 1 set of coordinates in the Dataset.
-if len(xFilt)<2:
-    print("K-means clustering can't be performed due to lack of sample coordinates")
-    quit()
 
-# Create numpy array 'data' for K-means containing (xFilt,yFilt) coordinates
-data = np.array([[xFilt[0],yFilt[0]]])
-for i in range(1,len(xFilt)):
-    data = np.append(data,[[xFilt[i],yFilt[i]]], axis=0)
+# Create numpy array 'data' for K-means containing non-noise coordinates from DBSCAN
+data = dbData[dbscan.labels_>-1]
 
-# Mobile Node Duplicate Coordinates Filter for K-means Convergence
+# Mobile Node Duplicate Coordinates Filter for faster K-means Convergence
 data = np.unique(data, axis=0) #Eliminate Duplicates in data
 
 kmeans,inertia,elbow = kmeansOptimize(data)
@@ -1135,97 +1220,6 @@ for i in range(len(latg)):
 # Save HTML Map File
 m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
 
-# DBSCAN
-print('Performing DBSCAN...')
-
-dbData = np.array([[xFilt[0],yFilt[0]]])
-for i in range(1,len(xFilt)):
-    dbData = np.append(dbData,[[xFilt[i],yFilt[i]]], axis=0)
-
-dbscan, nNeighborDistance, dbElbow = dbscanOptimize(dbData, minPts, kNeighbors)
-print('Optimal Value for Epsilon is', dbElbow.knee_y)
-print('MinPts required for each cluster is', minPts)
-
-print('DBSCAN Done!\n')
-
-# DBSCAN Elbow Plot
-plt.figure(fig)
-plt.plot(range(0,len(dbData)), nNeighborDistance)
-plt.plot(dbElbow.knee, dbElbow.knee_y, 'ro', label='Optimal ε: ' + str("{:.4f}".format(dbElbow.knee_y)))
-plt.xlabel('Nearest Neighbor Distance Index No.')
-plt.ylabel('Distance from Nearest Neighbor [Meters]')
-plt.title(dtn + ' 0' + phoneA  + ' DBSCAN Elbow')
-plt.legend() 
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCANElbow.jpg') #Change Directory Accordingly
-fig += 1
-    
-# DBSCAN Plot
-plt.figure(fig)
-plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
-plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
-plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
-plt.scatter(xg, yg, marker='1', label='GNode Locations', c='black', s=30)
-plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
-plt.scatter([], [], marker=' ', label='Parameters: ')
-plt.scatter([], [], marker=' ', label='n = '+ str(n))
-plt.scatter([], [], marker=' ', label='$D_{RSSIo} = $'+ str(dro))
-plt.scatter([], [], marker=' ', label='$RSSI_o = $'+ str(roRSSI))
-plt.scatter([], [], marker=' ', label='Circle Points = '+ str(points))
-plt.scatter([], [], marker=' ', label='ε  = '+ str("{:.4f}".format(dbElbow.knee_y)))
-plt.scatter([], [], marker=' ', label='MinPts  = '+ str(minPts))
-plt.scatter([], [], marker=' ', label='No. of Clusters  = '+ str(max(dbscan.labels_)+1))
-plt.grid(linewidth=1, color="w")
-ax = plt.gca()
-ax.set_facecolor('gainsboro')
-ax.set_axisbelow(True)
-plt.xlabel('x-axis [Meters]')
-plt.ylabel('y-axis [Meters]')
-plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
-plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
-fig += 1
-
-# DBSCAN Plot Folium Mapping
-
-# Cartesian to GPS Coordinate Conversion
-latData, longData = cartToGPS(dbData[dbscan.labels_>-1,0],dbData[dbscan.labels_>-1,1])
-latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
-latAct, longAct = cartToGPS(xAct, yAct)
-
-# Establish Folium Map
-m = folium.Map(location=[latg[0], longg[0]], zoom_start=20)
-
-# Add Mobile Node Locations to Folium Map
-for i in range(len(latData)):
-    folium.Circle(
-        radius=1,
-        location=[latData[i], longData[i]],
-        tooltip='Mobile Node Locations',
-        popup=str(latData[i])+','+str(longData[i]),
-        color='red',
-        fill='True'
-    ).add_to(m)
-
-# Add Actual Point
-folium.Marker(
-    location=[latAct[0], longAct[0]],
-    tooltip='Actual Point',
-    popup=str(latAct[0])+','+str(longAct[0]),
-    icon=folium.Icon(color='black', icon='star', prefix='fa'),
-).add_to(m)
-
-# Add GNode Locations
-for i in range(len(latg)):
-    folium.Marker(
-        location=[latg[i], longg[i]],
-        tooltip='GNode Locations',
-        popup=str(latg[i])+','+str(longg[i]),
-        icon=folium.Icon(color='black', icon='hdd-o', prefix='fa'),
-    ).add_to(m)
-
-# Save HTML Map File
-m.save(save_destination + dtn + ' 0' + phoneA + ' DBSCANMap.html')
-
 # Error Computations
 # Computed Position vs. Actual Position
 compVact, centVave, compVcent, triImprovement = errorComp(x, y, xOld, yOld, xAct, yAct, kmeans, xAve, yAve, xAveOld, yAveOld, data)
@@ -1283,186 +1277,186 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ErrorBehavior.jpg', bbox_
 plt.close('all')
 fig += 1
 
-# CSV Writing
-print('Saving to CSV...')
-with open(save_destination+'Basic.csv', mode='a') as blogs:
-    blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
-    blogswrite.writerow(['Time',dtn])
-    blogswrite.writerow(['Phone#','0'+phoneA])
-    blogswrite.writerow(['gnodeA',np.append(xg[0],yg[0])])
-    blogswrite.writerow(['gnodeB',np.append(xg[1],yg[1])])
-    blogswrite.writerow(['gnodeC',np.append(xg[2],yg[2])])
-    blogswrite.writerow(['Mean Raw Distances'])
-    blogswrite.writerow(['A','B','C'])
-    blogswrite.writerow([AfAve,BfAve,CfAve])
-    blogswrite.writerow(['Mean Raw X and Y Coordinates','','','',np.append(xAve,yAve)])
-    blogswrite.writerow(['Mean Coordinates with Tolerance Filter','','','',np.append(xFiltAve,yFiltAve)])
-    blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
-    blogswrite.writerow([''])
-    blogswrite.writerow([''])
+# # CSV Writing
+# print('Saving to CSV...')
+# with open(save_destination+'Basic.csv', mode='a') as blogs:
+#     blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
+#     blogswrite.writerow(['Time',dtn])
+#     blogswrite.writerow(['Phone#','0'+phoneA])
+#     blogswrite.writerow(['gnodeA',np.append(xg[0],yg[0])])
+#     blogswrite.writerow(['gnodeB',np.append(xg[1],yg[1])])
+#     blogswrite.writerow(['gnodeC',np.append(xg[2],yg[2])])
+#     blogswrite.writerow(['Mean Raw Distances'])
+#     blogswrite.writerow(['A','B','C'])
+#     blogswrite.writerow([AfAve,BfAve,CfAve])
+#     blogswrite.writerow(['Mean Raw X and Y Coordinates','','','',np.append(xAve,yAve)])
+#     blogswrite.writerow(['Mean Coordinates with Tolerance Filter','','','',np.append(xFiltAve,yFiltAve)])
+#     blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
+#     blogswrite.writerow([''])
+#     blogswrite.writerow([''])
     
-with open(save_destination+'DistanceConstants.csv', mode='a') as blogs:
-    blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
-    blogswrite.writerow(['Time',dtn])
-    blogswrite.writerow(['Phone#','0'+phoneA])
-    blogswrite.writerow(['n',n])
-    blogswrite.writerow(['dro',dro])
-    blogswrite.writerow(['RO RSSI',roRSSI])
-    blogswrite.writerow(['Circumference Points',points])
-    blogswrite.writerow([''])
-    blogswrite.writerow([''])
+# with open(save_destination+'DistanceConstants.csv', mode='a') as blogs:
+#     blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
+#     blogswrite.writerow(['Time',dtn])
+#     blogswrite.writerow(['Phone#','0'+phoneA])
+#     blogswrite.writerow(['n',n])
+#     blogswrite.writerow(['dro',dro])
+#     blogswrite.writerow(['RO RSSI',roRSSI])
+#     blogswrite.writerow(['Circumference Points',points])
+#     blogswrite.writerow([''])
+#     blogswrite.writerow([''])
     
-with open(save_destination+'Actual.csv', mode='a') as alogs:
-    alogswrite = csv.writer(alogs, dialect='excel', lineterminator='\n')
-    alogswrite.writerow(['Time',dtn])
-    alogswrite.writerow(['Phone#','0'+phoneA])
-    alogswrite.writerow(['Actual Coordinates','',np.append(xAct,yAct)])
-    alogswrite.writerow(['Actual Computed Distances from Gnodes'])
-    alogswrite.writerow(['A','','B','','C'])
-    alogswrite.writerow([comp_distanceAf,'',comp_distanceBf,'',comp_distanceCf])
-    alogswrite.writerow(['Trilateration Error vs Actual Coordinates'])
-    for i in range(np.shape(compVact)[0]):
-        alogswrite.writerow([compVact[i]])
-    alogswrite.writerow([''])
-    alogswrite.writerow([''])
+# with open(save_destination+'Actual.csv', mode='a') as alogs:
+#     alogswrite = csv.writer(alogs, dialect='excel', lineterminator='\n')
+#     alogswrite.writerow(['Time',dtn])
+#     alogswrite.writerow(['Phone#','0'+phoneA])
+#     alogswrite.writerow(['Actual Coordinates','',np.append(xAct,yAct)])
+#     alogswrite.writerow(['Actual Computed Distances from Gnodes'])
+#     alogswrite.writerow(['A','','B','','C'])
+#     alogswrite.writerow([comp_distanceAf,'',comp_distanceBf,'',comp_distanceCf])
+#     alogswrite.writerow(['Trilateration Error vs Actual Coordinates'])
+#     for i in range(np.shape(compVact)[0]):
+#         alogswrite.writerow([compVact[i]])
+#     alogswrite.writerow([''])
+#     alogswrite.writerow([''])
 
-with open(save_destination+'Coordinates.csv', mode='a') as clogs:
-    clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
-    clogswrite.writerow(['Time',dtn])
-    clogswrite.writerow(['Phone#','0'+phoneA])
-    clogswrite.writerow(['Raw X and Y Coordinates'])
-    for i in range(np.shape(x)[0]):
-        clogswrite.writerow([np.append(x[i],y[i])])
-    clogswrite.writerow(['-------------------------------'])
-    clogswrite.writerow(['Coordinates with Tolerance Filter'])
-    for i in range(np.shape(xFilt)[0]):
-        clogswrite.writerow([np.append(xFilt[i],yFilt[i])])
-    clogswrite.writerow([''])
-    clogswrite.writerow([''])
+# with open(save_destination+'Coordinates.csv', mode='a') as clogs:
+#     clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
+#     clogswrite.writerow(['Time',dtn])
+#     clogswrite.writerow(['Phone#','0'+phoneA])
+#     clogswrite.writerow(['Raw X and Y Coordinates'])
+#     for i in range(np.shape(x)[0]):
+#         clogswrite.writerow([np.append(x[i],y[i])])
+#     clogswrite.writerow(['-------------------------------'])
+#     clogswrite.writerow(['Coordinates with Tolerance Filter'])
+#     for i in range(np.shape(xFilt)[0]):
+#         clogswrite.writerow([np.append(xFilt[i],yFilt[i])])
+#     clogswrite.writerow([''])
+#     clogswrite.writerow([''])
     
-with open(save_destination+'Distances.csv', mode='a') as dlogs:
-    dlogswrite = csv.writer(dlogs, dialect='excel', lineterminator='\n')
-    dlogswrite.writerow(['Time',dtn])
-    dlogswrite.writerow(['Phone#','0'+phoneA])
-    dlogswrite.writerow(['Raw Distances'])
-    dlogswrite.writerow(['A','B','C'])
-    for i in range(len(distanceAf)):
-        dlogswrite.writerow([distanceAf[i],distanceBf[i],distanceCf[i]])    
-    dlogswrite.writerow([''])
-    dlogswrite.writerow([''])
+# with open(save_destination+'Distances.csv', mode='a') as dlogs:
+#     dlogswrite = csv.writer(dlogs, dialect='excel', lineterminator='\n')
+#     dlogswrite.writerow(['Time',dtn])
+#     dlogswrite.writerow(['Phone#','0'+phoneA])
+#     dlogswrite.writerow(['Raw Distances'])
+#     dlogswrite.writerow(['A','B','C'])
+#     for i in range(len(distanceAf)):
+#         dlogswrite.writerow([distanceAf[i],distanceBf[i],distanceCf[i]])    
+#     dlogswrite.writerow([''])
+#     dlogswrite.writerow([''])
     
-    with open(save_destination+'K-Means.csv', mode='a') as klogs:
-        klogswrite = csv.writer(klogs, dialect='excel', lineterminator='\n')
-        klogswrite.writerow(['Time',dtn])
-        klogswrite.writerow(['Phone#','0'+phoneA])
-        klogswrite.writerow(['Inertia'])
-        for i in range(len(inertia)):
-            klogswrite.writerow([inertia[i]]) 
-        klogswrite.writerow(['K-Means Centroid Coordinates'])
-        for i in range(elbow.knee):
-            klogswrite.writerows([[np.append(kmeans.cluster_centers_[i,0],kmeans.cluster_centers_[i,1])]]) 
-        klogswrite.writerow(['K-Means Centroids vs. Mean Coordinates with Tolerance Filter'])
-        klogswrite.writerows([centVave])
-        klogswrite.writerow(['K-Means Centroids vs. Coordinates w/ Tolerance Filter '])
-        for i in range(len(compVcent)):    
-            for j in range (len(compVcent[i])):
-                klogswrite.writerow([compVcent[i][j]])
-            klogswrite.writerow(['-------------------------------'])
-        klogswrite.writerow([''])
-        klogswrite.writerow([''])
+#     with open(save_destination+'K-Means.csv', mode='a') as klogs:
+#         klogswrite = csv.writer(klogs, dialect='excel', lineterminator='\n')
+#         klogswrite.writerow(['Time',dtn])
+#         klogswrite.writerow(['Phone#','0'+phoneA])
+#         klogswrite.writerow(['Inertia'])
+#         for i in range(len(inertia)):
+#             klogswrite.writerow([inertia[i]]) 
+#         klogswrite.writerow(['K-Means Centroid Coordinates'])
+#         for i in range(elbow.knee):
+#             klogswrite.writerows([[np.append(kmeans.cluster_centers_[i,0],kmeans.cluster_centers_[i,1])]]) 
+#         klogswrite.writerow(['K-Means Centroids vs. Mean Coordinates with Tolerance Filter'])
+#         klogswrite.writerows([centVave])
+#         klogswrite.writerow(['K-Means Centroids vs. Coordinates w/ Tolerance Filter '])
+#         for i in range(len(compVcent)):    
+#             for j in range (len(compVcent[i])):
+#                 klogswrite.writerow([compVcent[i][j]])
+#             klogswrite.writerow(['-------------------------------'])
+#         klogswrite.writerow([''])
+#         klogswrite.writerow([''])
 
-# Firebase Realtime Database
-print('Uploading to LoRa Rescue Realtime Database...')
-firebase = pyrebase.initialize_app(LoraRescueStorage)
-db = firebase.database()
-dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
-        "GNode B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
-        "GNode C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
-        "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
-        "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
-        "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
-        "Optimal Number of Clusters":int(elbow.knee)}
-dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
-        "Actual Computed Distances from Gnodes (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
-        "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
-dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
-        "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
-dataDistances = {"Distance to GNode A":list(distanceAf),
-        "Distance to GNode B":list(distanceBf),
-        "Distance to GNode C":list(distanceCf)}
-dataDistanceCalc = {"n":n,
-        "dro":dro,
-        "roRSSI":roRSSI,
-        "Circumference Points":points}
+# # Firebase Realtime Database
+# print('Uploading to LoRa Rescue Realtime Database...')
+# firebase = pyrebase.initialize_app(LoraRescueStorage)
+# db = firebase.database()
+# dataBasic = {"GNode A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
+#         "GNode B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
+#         "GNode C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
+#         "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
+#         "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
+#         "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
+#         "Optimal Number of Clusters":int(elbow.knee)}
+# dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
+#         "Actual Computed Distances from Gnodes (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
+#         "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact]}
+# dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
+#         "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
+# dataDistances = {"Distance to GNode A":list(distanceAf),
+#         "Distance to GNode B":list(distanceBf),
+#         "Distance to GNode C":list(distanceCf)}
+# dataDistanceCalc = {"n":n,
+#         "dro":dro,
+#         "roRSSI":roRSSI,
+#         "Circumference Points":points}
 
-clusterCenterX = list()
-clusterCenterY = list()
-clusterCompVcent = list()
-for i in range(elbow.knee):
-        clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
-        clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
-for i in range(len(compVcent)):    
-        for j in range (len(compVcent[i])):
-                clusterCompVcent.append(compVcent[i][j])
+# clusterCenterX = list()
+# clusterCenterY = list()
+# clusterCompVcent = list()
+# for i in range(elbow.knee):
+#         clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
+#         clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
+# for i in range(len(compVcent)):    
+#         for j in range (len(compVcent[i])):
+#                 clusterCompVcent.append(compVcent[i][j])
 
-dataKmeans = {"Intertia":list(inertia),
-        "Centroid X":list(clusterCenterX),
-        "Centroid Y":list(clusterCenterY),
-        "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
-        "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)}
+# dataKmeans = {"Intertia":list(inertia),
+#         "Centroid X":list(clusterCenterX),
+#         "Centroid Y":list(clusterCenterY),
+#         "Centroids vs Mean Coordinates w Tolerance Filter":list(centVave),
+#         "Centroids vs Coordinates w Tolerance Filter":list(clusterCompVcent)}
 
-dateAndTime = dtn.split()
-dateNow = dateAndTime[0]
-timeNow = dateAndTime[1].replace("-",":")
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
+# dateAndTime = dtn.split()
+# dateNow = dateAndTime[0]
+# timeNow = dateAndTime[1].replace("-",":")
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
-# Firebase Storage
-print('Uploading to LoRa Rescue Storage...\n')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/RSSIBehavior.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/ErrorBehavior.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilaterationMap.html') 
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilaterationMap.html') 
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-Means.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-MeansMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansMap.html')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANElbow.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DBSCAN.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DBSCANMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANMap.html')
-print("Done!")
+# # Firebase Storage
+# print('Uploading to LoRa Rescue Storage...\n')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/FrequencyDistribution.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/DistanceBehavior.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Distance/RSSIBehavior.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/ErrorBehavior.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilateration.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/RawTrilaterationMap.html') 
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilateration.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Trilateration/OldVImprovedTrilaterationMap.html') 
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansElbow.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-Means.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-Means.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-MeansMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/K-MeansMap.html')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANElbow.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCAN.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DBSCANMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Clustering/DBSCANMap.html')
+# print("Done!")

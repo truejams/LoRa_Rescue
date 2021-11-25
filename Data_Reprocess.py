@@ -752,7 +752,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
                     rssiC[i] = str(int(int(rssiC[i]) - 4))
             elif z1 == "2021-11-07":
                 for i in range(len(rssiB)):
-                    rssiA[i] = str(int(int(rssiA[i]) - 5))
+                    rssiA[i] = str(int(int(rssiA[i]) - 6))
                     rssiB[i] = str(int(int(rssiB[i])))
                     rssiC[i] = str(int(int(rssiC[i])))
             

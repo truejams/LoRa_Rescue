@@ -1244,7 +1244,7 @@ compVactMax = max(compVact)
 compVactMin = min(compVact)
 
 # Plot Old vs Trilateration Trilateration Graph
-plt.figure(fig,figsize=(10,5))
+plt.figure(fig)
 plt.scatter(xOld, yOld, label='Standard Trilateration', c='red', s=20)
 plt.scatter(xAveOld, yAveOld, label='Standard Trilateration Average', c='orange', s=20)
 plt.scatter(x, y, label='Improved Trilateration', c='blue', s=20)
@@ -1293,198 +1293,198 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ErrorBehavior.jpg', bbox_
 plt.close('all')
 fig += 1
 
-# CSV Writing
-print('Saving to CSV...')
-with open(save_destination+'Basic.csv', mode='a') as blogs:
-    blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
-    blogswrite.writerow(['Time',dtn])
-    blogswrite.writerow(['Phone#','0'+phoneA])
-    blogswrite.writerow(['gnodeA',np.append(xg[0],yg[0])])
-    blogswrite.writerow(['gnodeB',np.append(xg[1],yg[1])])
-    blogswrite.writerow(['gnodeC',np.append(xg[2],yg[2])])
-    blogswrite.writerow(['Mean Raw Distances'])
-    blogswrite.writerow(['A','B','C'])
-    blogswrite.writerow([AfAve,BfAve,CfAve])
-    blogswrite.writerow(['Mean Raw X and Y Coordinates','','','',np.append(xAve,yAve)])
-    blogswrite.writerow(['Mean Coordinates with Tolerance Filter','','','',np.append(xFiltAve,yFiltAve)])
-    blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
-    blogswrite.writerow([''])
-    blogswrite.writerow([''])
+# # CSV Writing
+# print('Saving to CSV...')
+# with open(save_destination+'Basic.csv', mode='a') as blogs:
+#     blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
+#     blogswrite.writerow(['Time',dtn])
+#     blogswrite.writerow(['Phone#','0'+phoneA])
+#     blogswrite.writerow(['gnodeA',np.append(xg[0],yg[0])])
+#     blogswrite.writerow(['gnodeB',np.append(xg[1],yg[1])])
+#     blogswrite.writerow(['gnodeC',np.append(xg[2],yg[2])])
+#     blogswrite.writerow(['Mean Raw Distances'])
+#     blogswrite.writerow(['A','B','C'])
+#     blogswrite.writerow([AfAve,BfAve,CfAve])
+#     blogswrite.writerow(['Mean Raw X and Y Coordinates','','','',np.append(xAve,yAve)])
+#     blogswrite.writerow(['Mean Coordinates with Tolerance Filter','','','',np.append(xFiltAve,yFiltAve)])
+#     blogswrite.writerow(['Optimal # of Clusters','',elbow.knee])
+#     blogswrite.writerow([''])
+#     blogswrite.writerow([''])
     
-with open(save_destination+'DistanceConstants.csv', mode='a') as blogs:
-    blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
-    blogswrite.writerow(['Time',dtn])
-    blogswrite.writerow(['Phone#','0'+phoneA])
-    blogswrite.writerow(['n',n])
-    blogswrite.writerow(['dro',dro])
-    blogswrite.writerow(['RO RSSI',roRSSI])
-    blogswrite.writerow(['Circumference Points',points])
-    blogswrite.writerow([''])
-    blogswrite.writerow([''])
+# with open(save_destination+'DistanceConstants.csv', mode='a') as blogs:
+#     blogswrite = csv.writer(blogs, dialect='excel', lineterminator='\n')
+#     blogswrite.writerow(['Time',dtn])
+#     blogswrite.writerow(['Phone#','0'+phoneA])
+#     blogswrite.writerow(['n',n])
+#     blogswrite.writerow(['dro',dro])
+#     blogswrite.writerow(['RO RSSI',roRSSI])
+#     blogswrite.writerow(['Circumference Points',points])
+#     blogswrite.writerow([''])
+#     blogswrite.writerow([''])
     
-with open(save_destination+'Actual.csv', mode='a') as alogs:
-    alogswrite = csv.writer(alogs, dialect='excel', lineterminator='\n')
-    alogswrite.writerow(['Time',dtn])
-    alogswrite.writerow(['Phone#','0'+phoneA])
-    alogswrite.writerow(['Actual Coordinates','',np.append(xAct,yAct)])
-    alogswrite.writerow(['Actual Computed Distances from Gnodes'])
-    alogswrite.writerow(['A','','B','','C'])
-    alogswrite.writerow([comp_distanceAf,'',comp_distanceBf,'',comp_distanceCf])
-    alogswrite.writerow(['Trilateration Error vs Actual Coordinates'])
-    for i in range(np.shape(compVact)[0]):
-        alogswrite.writerow([compVact[i]])
-    alogswrite.writerow([''])
-    alogswrite.writerow([''])
+# with open(save_destination+'Actual.csv', mode='a') as alogs:
+#     alogswrite = csv.writer(alogs, dialect='excel', lineterminator='\n')
+#     alogswrite.writerow(['Time',dtn])
+#     alogswrite.writerow(['Phone#','0'+phoneA])
+#     alogswrite.writerow(['Actual Coordinates','',np.append(xAct,yAct)])
+#     alogswrite.writerow(['Actual Computed Distances from Gnodes'])
+#     alogswrite.writerow(['A','','B','','C'])
+#     alogswrite.writerow([comp_distanceAf,'',comp_distanceBf,'',comp_distanceCf])
+#     alogswrite.writerow(['Trilateration Error vs Actual Coordinates'])
+#     for i in range(np.shape(compVact)[0]):
+#         alogswrite.writerow([compVact[i]])
+#     alogswrite.writerow([''])
+#     alogswrite.writerow([''])
 
-with open(save_destination+'Coordinates.csv', mode='a') as clogs:
-    clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
-    clogswrite.writerow(['Time',dtn])
-    clogswrite.writerow(['Phone#','0'+phoneA])
-    clogswrite.writerow(['Raw X and Y Coordinates'])
-    for i in range(np.shape(x)[0]):
-        clogswrite.writerow([np.append(x[i],y[i])])
-    clogswrite.writerow(['-------------------------------'])
-    clogswrite.writerow(['Coordinates with Tolerance Filter'])
-    for i in range(np.shape(xFilt)[0]):
-        clogswrite.writerow([np.append(xFilt[i],yFilt[i])])
-    clogswrite.writerow([''])
-    clogswrite.writerow([''])
+# with open(save_destination+'Coordinates.csv', mode='a') as clogs:
+#     clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
+#     clogswrite.writerow(['Time',dtn])
+#     clogswrite.writerow(['Phone#','0'+phoneA])
+#     clogswrite.writerow(['Raw X and Y Coordinates'])
+#     for i in range(np.shape(x)[0]):
+#         clogswrite.writerow([np.append(x[i],y[i])])
+#     clogswrite.writerow(['-------------------------------'])
+#     clogswrite.writerow(['Coordinates with Tolerance Filter'])
+#     for i in range(np.shape(xFilt)[0]):
+#         clogswrite.writerow([np.append(xFilt[i],yFilt[i])])
+#     clogswrite.writerow([''])
+#     clogswrite.writerow([''])
     
-with open(save_destination+'Distances.csv', mode='a') as dlogs:
-    dlogswrite = csv.writer(dlogs, dialect='excel', lineterminator='\n')
-    dlogswrite.writerow(['Time',dtn])
-    dlogswrite.writerow(['Phone#','0'+phoneA])
-    dlogswrite.writerow(['Raw Distances'])
-    dlogswrite.writerow(['A','B','C'])
-    for i in range(len(distanceAf)):
-        dlogswrite.writerow([distanceAf[i],distanceBf[i],distanceCf[i]])    
-    dlogswrite.writerow([''])
-    dlogswrite.writerow([''])
+# with open(save_destination+'Distances.csv', mode='a') as dlogs:
+#     dlogswrite = csv.writer(dlogs, dialect='excel', lineterminator='\n')
+#     dlogswrite.writerow(['Time',dtn])
+#     dlogswrite.writerow(['Phone#','0'+phoneA])
+#     dlogswrite.writerow(['Raw Distances'])
+#     dlogswrite.writerow(['A','B','C'])
+#     for i in range(len(distanceAf)):
+#         dlogswrite.writerow([distanceAf[i],distanceBf[i],distanceCf[i]])    
+#     dlogswrite.writerow([''])
+#     dlogswrite.writerow([''])
     
-    with open(save_destination+'K-Means.csv', mode='a') as klogs:
-        klogswrite = csv.writer(klogs, dialect='excel', lineterminator='\n')
-        klogswrite.writerow(['Time',dtn])
-        klogswrite.writerow(['Phone#','0'+phoneA])
-        klogswrite.writerow(['Inertia'])
-        for i in range(len(inertia)):
-            klogswrite.writerow([inertia[i]]) 
-        klogswrite.writerow(['K-Means Centroid Coordinates'])
-        for i in range(elbow.knee):
-            klogswrite.writerows([[np.append(kmeans.cluster_centers_[i,0],kmeans.cluster_centers_[i,1])]]) 
-        klogswrite.writerow(['K-Means Centroids vs. Mean Coordinates with Tolerance Filter'])
-        klogswrite.writerows([centVave])
-        klogswrite.writerow(['K-Means Centroids vs. Coordinates w/ Tolerance Filter '])
-        for i in range(len(compVcent)):    
-            for j in range (len(compVcent[i])):
-                klogswrite.writerow([compVcent[i][j]])
-            klogswrite.writerow(['-------------------------------'])
-        klogswrite.writerow([''])
-        klogswrite.writerow([''])
+#     with open(save_destination+'K-Means.csv', mode='a') as klogs:
+#         klogswrite = csv.writer(klogs, dialect='excel', lineterminator='\n')
+#         klogswrite.writerow(['Time',dtn])
+#         klogswrite.writerow(['Phone#','0'+phoneA])
+#         klogswrite.writerow(['Inertia'])
+#         for i in range(len(inertia)):
+#             klogswrite.writerow([inertia[i]]) 
+#         klogswrite.writerow(['K-Means Centroid Coordinates'])
+#         for i in range(elbow.knee):
+#             klogswrite.writerows([[np.append(kmeans.cluster_centers_[i,0],kmeans.cluster_centers_[i,1])]]) 
+#         klogswrite.writerow(['K-Means Centroids vs. Mean Coordinates with Tolerance Filter'])
+#         klogswrite.writerows([centVave])
+#         klogswrite.writerow(['K-Means Centroids vs. Coordinates w/ Tolerance Filter '])
+#         for i in range(len(compVcent)):    
+#             for j in range (len(compVcent[i])):
+#                 klogswrite.writerow([compVcent[i][j]])
+#             klogswrite.writerow(['-------------------------------'])
+#         klogswrite.writerow([''])
+#         klogswrite.writerow([''])
 
-# Firebase Realtime Database
+# # Firebase Realtime Database
 
-print('Uploading to LoRa Rescue Realtime Database...')
-firebase = pyrebase.initialize_app(LoraRescueStorage)
-db = firebase.database()
-dataBasic = {"Gateway A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
-        "Gateway B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
-        "Gateway C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
-        "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
-        "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
-        "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
-        "Optimal Number of Clusters":int(elbow.knee)}
-dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
-        "Actual Computed Distances from Gateways (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
-        "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact],
-        "Centroid vs Actual Coordinates":centVact}
-dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
-        "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
-dataDistances = {"Distance to Gateway A":list(distanceAf),
-        "Distance to Gateway B":list(distanceBf),
-        "Distance to Gateway C":list(distanceCf)}
-dataDistanceCalc = {"n":n,
-        "dro":dro,
-        "roRSSI":roRSSI,
-        "Circumference Points":points}
+# print('Uploading to LoRa Rescue Realtime Database...')
+# firebase = pyrebase.initialize_app(LoraRescueStorage)
+# db = firebase.database()
+# dataBasic = {"Gateway A":' '.join([str(item) for item in list(np.append(xg[0],yg[0]))]),
+#         "Gateway B":' '.join([str(item) for item in list(np.append(xg[1],yg[1]))]),
+#         "Gateway C":' '.join([str(item) for item in list(np.append(xg[2],yg[2]))]),
+#         "Distance A Mean":AfAve,"Distance B Mean":BfAve,"Distance C Mean":CfAve,
+#         "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
+#         "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
+#         "Optimal Number of Clusters":int(elbow.knee)}
+# dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
+#         "Actual Computed Distances from Gateways (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
+#         "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact],
+#         "Centroid vs Actual Coordinates":centVact}
+# dataCoordinates = {"Raw X":list(x), "Raw Y":list(y),
+#         "Filtered X":list(xFilt), "Filtered Y":list(yFilt)}
+# dataDistances = {"Distance to Gateway A":list(distanceAf),
+#         "Distance to Gateway B":list(distanceBf),
+#         "Distance to Gateway C":list(distanceCf)}
+# dataDistanceCalc = {"n":n,
+#         "dro":dro,
+#         "roRSSI":roRSSI,
+#         "Circumference Points":points}
 
-clusterCenterX = list()
-clusterCenterY = list()
-clusterCompVcent = list()
+# clusterCenterX = list()
+# clusterCenterY = list()
+# clusterCompVcent = list()
 
-for i in range(elbow.knee):
-        clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
-        clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
-for i in range(len(compVcent)):    
-        for j in range (len(compVcent[i])):
-                clusterCompVcent.append(compVcent[i][j])            
-for i in range(len(centVave)):
-    centVave[i] = centVave[i].tolist()
+# for i in range(elbow.knee):
+#         clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
+#         clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
+# for i in range(len(compVcent)):    
+#         for j in range (len(compVcent[i])):
+#                 clusterCompVcent.append(compVcent[i][j])            
+# for i in range(len(centVave)):
+#     centVave[i] = centVave[i].tolist()
 
-dataKmeans = {"Inertia":list(inertia),
-        "Centroid X":list(clusterCenterX),
-        "Centroid Y":list(clusterCenterY),
-        "Centroids vs Mean Coordinates":list(centVave),
-        "Centroids vs Coordinates":list(clusterCompVcent),
-        }
+# dataKmeans = {"Inertia":list(inertia),
+#         "Centroid X":list(clusterCenterX),
+#         "Centroid Y":list(clusterCenterY),
+#         "Centroids vs Mean Coordinates":list(centVave),
+#         "Centroids vs Coordinates":list(clusterCompVcent),
+#         }
 
-dateAndTime = dtn.split()
-dateNow = dateAndTime[0]
-timeNow = dateAndTime[1].replace("-",":")
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
-db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
+# dateAndTime = dtn.split()
+# dateNow = dateAndTime[0]
+# timeNow = dateAndTime[1].replace("-",":")
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Basic Raw Information").set(dataBasic)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distance Calculation Constants").set(dataDistanceCalc)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Actual Data").set(dataActual)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Raw and Filtered Coordinates").set(dataCoordinates)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Distances to Gateway Nodes").set(dataDistances)
+# db.child(dateNow).child(timeNow +' 0'+phoneA).child("Kmeans Data").set(dataKmeans)
 
-# Firebase Storage
-print('Uploading to LoRa Rescue Storage...\n')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Distance/FrequencyDistribution.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Distance/DistanceBehavior.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Distance/RSSIBehavior.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/ErrorBehavior.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/RawTrilateration.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/RawTrilaterationMap.html') 
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/OldVImprovedTrilateration.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/OldVImprovedTrilaterationMap.html')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/K-MeansElbow.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-Means.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/K-Means.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-MeansMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/K-MeansMap.html')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-MeansMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Output/ComputedMobileNodeLocationMap.html')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCANElbow.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DBSCAN.jpg',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCAN.jpg')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' DBSCANMap.html',
-    'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCANMap.html')
-firebaseUpload(LoraRescueStorage, 
-    dtn + ' 0' + phoneA + ' K-MeansMap.html',
-    'LoRa Rescue Data/' + 'Output/' + dtn[0:10] + ' ' + dtn[11:19] + ' 0' + phoneA + '.html')
-print("Done!")
+# # Firebase Storage
+# print('Uploading to LoRa Rescue Storage...\n')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' FrequencyDistribution.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Distance/FrequencyDistribution.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DistanceBehavior.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Distance/DistanceBehavior.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' RSSIBehavior.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Distance/RSSIBehavior.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' ErrorBehavior.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/ErrorBehavior.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' RawTrilateration.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/RawTrilateration.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' RawTrilaterationMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/RawTrilaterationMap.html') 
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/OldVImprovedTrilateration.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' OldVImprovedTrilaterationMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Trilateration/OldVImprovedTrilaterationMap.html')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-MeansElbow.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/K-MeansElbow.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-Means.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/K-Means.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-MeansMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/K-MeansMap.html')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-MeansMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Output/ComputedMobileNodeLocationMap.html')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DBSCANElbow.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCANElbow.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DBSCAN.jpg',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCAN.jpg')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' DBSCANMap.html',
+#     'LoRa Rescue Data/' + dtn[0:10] + '/' + dtn[11:19].replace("-",":") + ' 0' + phoneA + '/Developer/Clustering/DBSCANMap.html')
+# firebaseUpload(LoraRescueStorage, 
+#     dtn + ' 0' + phoneA + ' K-MeansMap.html',
+#     'LoRa Rescue Data/' + 'Output/' + dtn[0:10] + ' ' + dtn[11:19] + ' 0' + phoneA + '.html')
+# print("Done!")

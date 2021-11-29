@@ -971,7 +971,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             ax = plt.gca()
             ax.set_facecolor('gainsboro')
             ax.set_axisbelow(True)
-            plt.title('Improved Trilateration', y=1.05)
+            plt.title(dtn + ' 0' + phoneA  + ' Improved Trilateration', y=1.05)
             plt.xlabel('Easting [Meters]')
             plt.ylabel('Northing [Meters]')
             plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
@@ -1145,7 +1145,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             ax.set_axisbelow(True)
             plt.xlabel('Easting [Meters]')
             plt.ylabel('Northing [Meters]')
-            plt.title('DBSCAN', y=1.05)
+            plt.title(dtn + ' 0' + phoneA  + ' DBSCAN', y=1.05)
             plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
             plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches='tight') #Change Directory Accordingly
             fig += 1
@@ -1235,7 +1235,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             ax.set_axisbelow(True)
             plt.xlabel('Easting [Meters]')
             plt.ylabel('Northing [Meters]')
-            plt.title('K-Means', y=1.05)
+            plt.title(dtn + ' 0' + phoneA  + ' K-Means', y=1.05)
             plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
             plt.savefig(save_destination + dtn + ' 0' + phoneA + ' K-Means.jpg', bbox_inches='tight') #Change Directory Accordingly
             fig += 1
@@ -1292,7 +1292,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             compVactMin = min(compVact)
 
             # Plot Old vs Trilateration Trilateration Graph
-            plt.figure(fig,figsize=(10,5))
+            plt.figure(fig)
             plt.scatter(xOld, yOld, label='Standard Trilateration', c='red', s=20)
             plt.scatter(xAveOld, yAveOld, label='Standard Trilateration Average', c='orange', s=20)
             plt.scatter(x, y, label='Improved Trilateration', c='blue', s=20)

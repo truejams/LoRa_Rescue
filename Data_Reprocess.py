@@ -1311,7 +1311,7 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             ax = plt.gca()
             ax.set_facecolor('gainsboro')
             ax.set_axisbelow(True)
-            plt.title('Standard vs Improved Trilateration', y=1.05)
+            plt.title(dtn + ' 0' + phoneA  + ' Standard vs Improved Trilateration', y=1.05)
             plt.xlabel('Easting [Meters]')
             plt.ylabel('Northing [Meters]')
             plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))

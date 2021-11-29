@@ -30,7 +30,7 @@ from sklearn.neighbors import NearestNeighbors
 # Ianny's Directory
 # save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-save_destination = "C:\\LoRa_Rescue\\11-25-21_Tests\\"
+save_destination = "C:\\LoRa_Rescue\\11-29-21_Final_Reprocess\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -725,8 +725,8 @@ with open(save_destination+'Average Error.csv', mode='a') as clogs:
 
 
 for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
-    # if z1 == "2021-11-13": # UNCOMMENT THIS FOR 2ND RUN
-    if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
+    if z1 == "2021-11-13": # UNCOMMENT THIS FOR 2ND RUN
+    # if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
         firebase = pyrebase.initialize_app(LoraRescueStorage)
         db = firebase.database()
         databaseEntries = db.child(z1).get()

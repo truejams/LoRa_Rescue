@@ -133,55 +133,9 @@ void loop() {
       memset (hopData, 0, sizeof(hopData));
     }
     //////////////////////////////////////
-    
-//    delayTime = millis();
   }
   digitalWrite(led,LOW);
-
-  // Looks to see if receiving is done and resets counter
-//  timer = abs(currentTime - delayTime);
-  
-  ////////////////////////////////////////////////////////////
-  ////////////////////////////////////////////////////////////
-  // This runs when a data is received and 500ms has passed.
-//  if (timer >= 500){
-//    counter = 0;
-//    // sends data to other gateway nodes if Rx is done
-//    // resets phoneNum after
-//    if (fromHop == 1){
-//      for(int i=0;i<dataSize;i++){
-//        Serial.print(gway);
-//        Serial.print("2");
-//        Serial.println(hopRSSI[i]);
-//      }
-//      Serial.print(gway);
-//      Serial.println("3");
-//      if(gway == 'B'){
-//        gnodeBdone();
-//      }
-//      memset (hopRSSI, 0, dataSize);
-//      memset (d, 0, dataSize);
-//      digitalWrite(led,LOW);
-//    } else if (fromHop == 0) {
-//      for(int i=0;i<dataSize;i++){
-//        Serial.print("A2");
-//        // RSSI To distance
-//        //d[i] = pow(10,((roRSSI-rxRSSI[i])/(10*n)))*dro;
-//        Serial.println(rxRSSI[i]);
-//      }
-//      Serial.println("A3");
-//      digitalWrite(led,LOW);
-//      memset (rxRSSI, 0, dataSize);
-//    }
-//    fromHop = 3;
-//  }
-  
-  // resets arduino board once the runtime is near 50 days (internal clock overflows)
-//  if (currentTime >= 4294967200){
-//    resetArduino();
-//  }
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Sets LoRa to receive mode

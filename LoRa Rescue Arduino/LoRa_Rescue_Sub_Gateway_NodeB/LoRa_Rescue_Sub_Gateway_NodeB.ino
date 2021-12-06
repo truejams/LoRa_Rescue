@@ -104,40 +104,6 @@ void loop() {
     }
   }
   digitalWrite(led,LOW);
-  
-  // Looks to see if receiving is done and resets counter
-//  timer = currentTime-delayTime;
-
-
-//  // Sends if data is received and 500ms has passed
-//  if (timer >= 1000){
-//    counter = 0;
-//    digitalWrite(led,LOW);
-//
-//    // displays RSSI
-//    if(dataRec){
-//      Serial.print("RSSI: Datasize = ");
-//      dataSize = sizeof(rxRSSI)/4;
-//      Serial.println(dataSize);
-//      for(int i=0;i<dataSize;i++){
-//        Serial.print(rxRSSI[i]);
-//        Serial.print(" ");
-//        if(i==19||i==39||i==59) Serial.println();
-//      }
-//
-//      txMode(); // Sends the RSSI values to the Main gnode
-//      
-//      // clears phone number
-//      memset (phone, 0, sizeof(phone));
-//      memset (rxRSSI, 0, sizeof(rxRSSI));
-//    }
-//    dataRec = 0;
-//  }
-  
-  // resets arduino board once the runtime is near 50 days (internal clock overflows)
-//  if (currentTime >= 4294967200){
-//    digitalWrite(reset, LOW);
-//  }
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -148,9 +114,6 @@ void rxMode(){
 }
 
 ////////////////////////////////////////////////////////////////////
-// This is to be modified for other gateways to hop the data to the main gateway.
-// Further research must be conducted to how the LoRaWAN gateway receives data.
-// Note that the sent data contains 1 phone number and the RSSI array saved earlier
 void txMode(){
   // send data
   delay(8000);

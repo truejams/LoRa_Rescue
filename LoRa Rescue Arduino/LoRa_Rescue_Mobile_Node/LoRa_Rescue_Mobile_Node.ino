@@ -65,7 +65,6 @@ void setup() {
   delay(1000);
   digitalWrite(led, HIGH);
   delay(2000);
-  
 }
 
 void loop() {
@@ -91,9 +90,6 @@ void loop() {
       LoRa.endPacket();
       digitalWrite(led,LOW);
       ///// End of LoRa send code
-  //    digitalWrite(led, LOW);
-  //    LoRa.receive();
-  //    rxMode(); 
     }
     else if(phoneNum[0] == '0') {
       digitalWrite(led,LOW);

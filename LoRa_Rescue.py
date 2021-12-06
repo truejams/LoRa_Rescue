@@ -26,9 +26,9 @@ from sklearn.neighbors import NearestNeighbors
 # Benjamin's Directory
 # save_destination = "C:\\LoRa_Rescue\\11-21-21_Tests\\"
 # Ianny's Directory
-save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
+# save_destination = "D:\\Users\\Yani\\Desktop\\LoRa Rescue Data\\"
 # Greg's Directory
-# save_destination = "C:\\LoRa_Rescue\\"
+save_destination = "C:\\LoRa_Rescue\\"
 
 # Change Current Working Directory in Python
 os.chdir(save_destination)
@@ -628,7 +628,7 @@ def errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct
     newtriVact = np.mean(newtriVact)
     triImprovement = ((newtriVact - oldtriVact) / (oldtriVact))*-100
 
-    return compVact, centVave, compVcent, triImprovement
+    return compVact, centVave, compVcent, centVact, triImprovement
 
 def firebaseUpload(firebaseConfig, localDir, cloudDir):
     # Initialize Firebase Storage
@@ -717,13 +717,19 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:43:54 09976500624")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:23:51 09976500605")
 
-# Compensation
+# # Compensation
+
+# for i in range(len(rssiB)):
+#     rssiA[i] = str(int(int(rssiA[i]) - 3))
+#     rssiB[i] = str(int(int(rssiB[i]) - 2))
+#     rssiC[i] = str(int(int(rssiC[i]) + 5))
+
 for i in range(len(rssiB)):
-    rssiA[i] = str(int(int(rssiA[i]) - 5))
-    rssiB[i] = str(int(int(rssiB[i]) - 4))
-    rssiC[i] = str(int(int(rssiC[i]) + 2))
+    rssiA[i] = str(int(int(rssiA[i]) - 6))
+    rssiB[i] = str(int(int(rssiB[i])))
+    rssiC[i] = str(int(int(rssiC[i])))
 
 ################### RSSI Kalman ######################
 
@@ -735,10 +741,20 @@ rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.005, R=1)
 rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.005, R=1)
 rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=0.005, R=1)
 
+
+with open(save_destination+'Kalman Comparison.csv', mode='a') as clogs:
+    clogswrite = csv.writer(clogs, dialect='excel', lineterminator='\n')
+    for i in range(len(rssiA_int)):
+        rssiA_Diff = abs(rssiA_int[i] - rssiA_kalman[i])
+        # print(str(rssiA_int[i])+"\t"+str(rssiA_kalman[i]).replace("[","")[0:8]+"\t"+str(rssiA_Diff)[1:7])
+        clogswrite.writerow([str(rssiA_int[i]),str(rssiA_kalman[i]).replace("[","")[0:8],str(rssiA_Diff)[1:7]])
+
 # Convert RSSI to Distance
 # distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
 # distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
 # distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
+
+quit()
 
 # Convert Kalman Filter RSSI to Distance
 distanceAf = rssiToDist(rssiA_kalman,nA,dro,roRSSI)
@@ -809,7 +825,7 @@ comp_distanceBf = haversine(latAct[0], longAct[0], latg[1], longg[1])
 comp_distanceCf = haversine(latAct[0], longAct[0], latg[2], longg[2])
 
 # Plot the data frequency of the gateways
-fig = 1 
+fig = 1
 plt.figure(fig)
 distSeriesA = pd.Series(distanceAf).value_counts().reset_index().sort_values('index').reset_index(drop=True)
 distSeriesA.columns = ['Distance [Meters]','Frequency']
@@ -1238,7 +1254,7 @@ m.save(save_destination + dtn + ' 0' + phoneA + ' K-MeansMap.html')
 
 # Error Computations
 # Computed Position vs. Actual Position
-compVact, centVave, compVcent, triImprovement = errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct, longAct, kmeans)
+compVact, centVave, compVcent, centVact, triImprovement = errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct, longAct, kmeans)
 compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)
@@ -1382,7 +1398,6 @@ fig += 1
 #         klogswrite.writerow([''])
 
 # # Firebase Realtime Database
-
 # print('Uploading to LoRa Rescue Realtime Database...')
 # firebase = pyrebase.initialize_app(LoraRescueStorage)
 # db = firebase.database()
@@ -1393,6 +1408,8 @@ fig += 1
 #         "Mean X and Y Coordinates":' '.join([str(item) for item in list(np.append(xAve,yAve))]),
 #         "Mean Filtered X and Y Coordinates":' '.join([str(item) for item in list(np.append(xFiltAve,yFiltAve))]),
 #         "Optimal Number of Clusters":int(elbow.knee)}
+# for i in range(len(centVact)):
+#     centVact[i] = centVact[i].tolist()
 # dataActual = {"Actual Coordinates":' '.join([str(item).replace("[","").replace("]","") for item in list(np.append(xAct,yAct))]),
 #         "Actual Computed Distances from Gateways (A B C)":str(comp_distanceAf).replace("[","").replace("]","")+" "+str(comp_distanceBf).replace("[","").replace("]","")+" "+str(comp_distanceCf).replace("[","").replace("]",""),
 #         "Trilateration Error vs Actual Coordinates":[str(item).replace("[","").replace("]","") for item in compVact],
@@ -1410,7 +1427,6 @@ fig += 1
 # clusterCenterX = list()
 # clusterCenterY = list()
 # clusterCompVcent = list()
-
 # for i in range(elbow.knee):
 #         clusterCenterX.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,0]))]))
 #         clusterCenterY.append(''.join([str(item) for item in list(str(kmeans.cluster_centers_[i,1]))]))
@@ -1424,7 +1440,7 @@ fig += 1
 #         "Centroid X":list(clusterCenterX),
 #         "Centroid Y":list(clusterCenterY),
 #         "Centroids vs Mean Coordinates":list(centVave),
-#         "Centroids vs Coordinates":list(clusterCompVcent),
+#         "Centroids vs Coordinates":list(clusterCompVcent)
 #         }
 
 # dateAndTime = dtn.split()

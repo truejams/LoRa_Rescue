@@ -335,6 +335,29 @@ def importCSV(save_destination, startrow, endrow):
     
     return rssiA, rssiB, rssiC, dtn, phone
 
+def importSimulationResults():
+    with open('Out.txt','r') as f:
+        lines = f.readlines()
+    rssiA = list()
+    rssiB = list()
+    rssiC = list()
+
+    dtn = str(dt.now())
+    dtn = dtn[0:19]
+    dtn = dtn.replace(':','-')
+    phone = "0997SIMULAT"
+    latg = np.array([14.66494,14.67337,14.66777])
+    longg = np.array([120.97195,120.96867,120.96284])
+    latAct = np.array([14.66831])
+    longAct = np.array([120.96801])
+
+    for i in lines:
+        [a,b,c] = i.replace('\n','').split(' ')
+        rssiA.append(a)
+        rssiB.append(b)
+        rssiC.append(c)
+    return rssiA, rssiB, rssiC, dtn, phone, latg, longg, latAct, longAct
+
 def importDatabase(date, phoneTime):
     temp = phoneTime.split()
     time = temp[0]
@@ -424,7 +447,7 @@ def get_intersections(x0, y0, r0, x1, y1, r1):
         return x,y
 
 def trilaterateCircle(xCirc,yCirc,intersect,points):
-    deltaDist = [10000,10000,10000]
+    deltaDist = [100000,100000,100000]
     dist = [0,0,0]
     x = [0,0,0]
     y = [0,0,0]
@@ -701,6 +724,7 @@ def kalman_filter(signal, A, H, Q, R):
 
     return predicted_signal
 
+
 # Listen/Read for Data
 # Retrieve RSSI data, date and time, and phone number
 
@@ -716,26 +740,34 @@ def kalman_filter(signal, A, H, Q, R):
 # Manually retrieve data from rawData.csv
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
-# Format - Date: "2021-10-30" Time and Phone : "14:46:14 09976800632"
-rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:23:51 09976500605")
+# Format - Date: "2021-10-30" Time and Phone : "14:43:54 09976500624" 14:43:54 09976500624 14:43:57 09976500623
+# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:43:54 09976500624")
+rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importSimulationResults()
 
 # # Compensation
 
+# 624
+# for i in range(len(rssiB)):
+#     rssiA[i] = str(int(int(rssiA[i]) - 5))
+#     rssiB[i] = str(int(int(rssiB[i]) - 4))
+#     rssiC[i] = str(int(int(rssiC[i]) + 3))
+
+# 623
 # for i in range(len(rssiB)):
 #     rssiA[i] = str(int(int(rssiA[i]) - 3))
 #     rssiB[i] = str(int(int(rssiB[i]) - 2))
 #     rssiC[i] = str(int(int(rssiC[i]) + 5))
 
-for i in range(len(rssiB)):
-    rssiA[i] = str(int(int(rssiA[i]) - 6))
-    rssiB[i] = str(int(int(rssiB[i])))
-    rssiC[i] = str(int(int(rssiC[i])))
+# for i in range(len(rssiB)):
+#     rssiA[i] = str(int(int(rssiA[i]) - 6))
+#     rssiB[i] = str(int(int(rssiB[i])))
+#     rssiC[i] = str(int(int(rssiC[i])))
 
 ################### RSSI Kalman ######################
 
-rssiA_int = [int(i) for i in rssiA]
-rssiB_int = [int(i) for i in rssiB]
-rssiC_int = [int(i) for i in rssiC]
+rssiA_int = [float(i) for i in rssiA]
+rssiB_int = [float(i) for i in rssiB]
+rssiC_int = [float(i) for i in rssiC]
 
 rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.005, R=1)
 rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.005, R=1)
@@ -749,12 +781,10 @@ with open(save_destination+'Kalman Comparison.csv', mode='a') as clogs:
         # print(str(rssiA_int[i])+"\t"+str(rssiA_kalman[i]).replace("[","")[0:8]+"\t"+str(rssiA_Diff)[1:7])
         clogswrite.writerow([str(rssiA_int[i]),str(rssiA_kalman[i]).replace("[","")[0:8],str(rssiA_Diff)[1:7]])
 
-# Convert RSSI to Distance
+# # Convert RSSI to Distance
 # distanceAf = rssiToDist(rssiA,nA,dro,roRSSI)
 # distanceBf = rssiToDist(rssiB,nB,dro,roRSSI)
 # distanceCf = rssiToDist(rssiC,nC,dro,roRSSI)
-
-quit()
 
 # Convert Kalman Filter RSSI to Distance
 distanceAf = rssiToDist(rssiA_kalman,nA,dro,roRSSI)
@@ -823,6 +853,8 @@ yFiltAve = np.mean(yFilt)
 comp_distanceAf = haversine(latAct[0], longAct[0], latg[0], longg[0])
 comp_distanceBf = haversine(latAct[0], longAct[0], latg[1], longg[1])
 comp_distanceCf = haversine(latAct[0], longAct[0], latg[2], longg[2])
+
+# phoneA = "9999999999"
 
 # Plot the data frequency of the gateways
 fig = 1

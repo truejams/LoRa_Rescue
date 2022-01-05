@@ -706,8 +706,8 @@ with open(save_destination+'Average Error.csv', mode='a') as clogs:
 
 
 for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
-    if z1 == "2021-11-13": # UNCOMMENT THIS FOR 2ND RUN
-    # if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
+    # if z1 == "2021-11-13": # UNCOMMENT THIS FOR 2ND RUN
+    if len(z1) < 11 and z1 != "2021-5-20" and z1 != "2021-11-13":  # COMMENT THIS FOR 2ND RUN
         firebase = pyrebase.initialize_app(LoraRescueStorage)
         db = firebase.database()
         databaseEntries = db.child(z1).get()
@@ -1283,6 +1283,19 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             compVactMax = max(compVact)
             compVactMin = min(compVact)
 
+            # DBSCAN Variables for Error Computation
+            DBSCAN_X_Coor = dbData[dbscan.labels_>-1,0]
+            DBSCAN_Y_Coor = dbData[dbscan.labels_>-1,1]
+            DBSCAN_Lat, DBSCAN_Long = cartToGPS(DBSCAN_X_Coor,DBSCAN_Y_Coor)
+
+            # Clustered Computed Coordinates vs. Actual Distance
+            FILTERED_TO_ACT_DISTANCE = list()
+            for i in range(len(DBSCAN_X_Coor)):
+                FILTERED_TO_ACT_DISTANCE.append(haversine(DBSCAN_Lat[i],DBSCAN_Long[i],latAct[0],longAct[0]))
+            ERROR_FILTERED = sum(FILTERED_TO_ACT_DISTANCE)/len(FILTERED_TO_ACT_DISTANCE)
+            ERROR_FILTERED_MAX = max(FILTERED_TO_ACT_DISTANCE)
+            ERROR_FILTERED_MIN = min(FILTERED_TO_ACT_DISTANCE)
+
             # Plot Old vs Trilateration Trilateration Graph
             plt.figure(fig)
             plt.scatter(xOld, yOld, label='Standard Trilateration', c='red', s=20)
@@ -1330,6 +1343,28 @@ for z1 in entries1: # "2021-10-30" "2021-11-06" "2021-11-07" "2021-11-13"
             plt.ylabel('Distance [Meters]')
             plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
             plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ErrorBehavior.jpg', bbox_inches='tight')
+            plt.close('all')
+            fig += 1
+
+            # Plot the behavior of the error of filtered clustering output
+            plt.figure(fig)
+            plt.plot(FILTERED_TO_ACT_DISTANCE, 'r', label='Clustered Trilateration Error')
+            plt.plot(np.arange(len(FILTERED_TO_ACT_DISTANCE)),np.ones([1,len(FILTERED_TO_ACT_DISTANCE)])[0]*ERROR_FILTERED , 'r--', label='Average Clustered Error')
+            plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+            plt.plot([], [], ' ', label='Parameters:')
+            plt.plot([], [], ' ', label='n = '+str(n))
+            plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+            plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+            plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+            plt.plot([], [], ' ', label='Output:')
+            plt.plot([], [], ' ', label='Average Error = '+str("{:.4f}".format(ERROR_FILTERED[0])))
+            plt.plot([], [], ' ', label='Max Error = '+str("{:.4f}".format(ERROR_FILTERED_MAX[0])))
+            plt.plot([], [], ' ', label='Min Error = '+str("{:.4f}".format(ERROR_FILTERED_MIN[0])))
+            plt.title(dtn + ' 0' + phoneA  + ' Clustered Error Behavior')
+            plt.xlabel('Datapoint')
+            plt.ylabel('Distance [Meters]')
+            plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+            plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ClusteredErrorBehavior.jpg', bbox_inches='tight')
             plt.close('all')
             fig += 1
 

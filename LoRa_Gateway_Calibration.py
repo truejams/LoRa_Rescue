@@ -53,8 +53,8 @@ dist = list()
 diff = list()
 
 ###### CHANGE THIS FOR YOUR DIRECTORY
-save_destination = "C:\\LoRa_Rescue\\11-13-21_Data\\"
-# save_destination = "C:\\LoRa_Rescue\\"
+# save_destination = "C:\\LoRa_Rescue\\11-13-21_Data\\"
+save_destination = "C:\\LoRa_Rescue\\"
 os.chdir(save_destination)
 
 # Distance calculation constants
@@ -197,6 +197,31 @@ def checkDatabase(dateNow,timeNow,phone):
     if len(entries) >= 20:
         check = 1
     return check, timePrev
+
+def importSimulationResults():
+    with open('Out.txt','r') as f:
+        lines = f.readlines()
+    rssiA = list()
+    rssiB = list()
+    rssiC = list()
+
+    dtn = str(dt.now())
+    dtn = dtn[0:19]
+    dtn = dtn.replace(':','-')
+    phone = "0997SIMULAT"
+    latg = np.array([14.66494,14.67337,14.66777])
+    longg = np.array([120.97195,120.96867,120.96284])
+    latAct = np.array([14.667779016526799])
+    longAct = np.array([120.96834675462337])
+
+    for i in lines:
+        [a,b,c] = i.replace('\n','').split(' ')
+        rssiA.append(a)
+        rssiB.append(b)
+        rssiC.append(c)
+    
+    rssiA = [-90.9171 for i in rssiA]
+    return rssiA, rssiB, rssiC, dtn, phone, latg, longg, latAct, longAct
 
 # Function Declarations
 def listenForData(port,baud):
@@ -341,17 +366,18 @@ dtn = dtn[0:19]
 # Import Data using Serial Listener or Import Database
 
 # rssi, phone = listenForData(port,baud)
-rssi, phone = serialListener(port, baud)
+# rssi, phone = serialListener(port, baud)
 
 # rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct =  importDatabase("2021-11-06", "17:26:36", "09976500626")
+rssi, rssiB, rssiC, dtn, phone, latgnode, longgnode, latAct, longAct = importSimulationResults()
 dateNow = dtn[0:10] #Don't comment
 timeNow = dtn[11:19] #Don't comment
-# latg = latgnode[1]
-# longg = longgnode[1]
+latg = latgnode[0]
+longg = longgnode[0]
 
 dtn = dtn.replace(':','-')
-# actDist = haversine(latg,longg,latAct[0],longAct[0]) #Code for importing from database
-actDist = haversine(latg,longg,latAct,longAct) #Code for Serial Listening
+actDist = haversine(latg,longg,latAct[0],longAct[0]) #Code for importing from database
+# actDist = haversine(latg,longg,latAct,longAct) #Code for Serial Listening
 print("\nMobile Node is "+ str(actDist) +" meters away gateway A")
 
 for i in range(len(rssi)): rssi[i] = int(rssi[i])

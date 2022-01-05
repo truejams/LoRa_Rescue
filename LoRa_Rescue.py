@@ -345,14 +345,14 @@ def importSimulationResults():
     dtn = str(dt.now())
     dtn = dtn[0:19]
     dtn = dtn.replace(':','-')
-    phone = "0997SIMULAT"
+    phone = "9SIMULATION"
     latg = np.array([14.66494,14.67337,14.66777])
     longg = np.array([120.97195,120.96867,120.96284])
     latAct = np.array([14.66831])
     longAct = np.array([120.96801])
 
     for i in lines:
-        [a,b,c] = i.replace('\n','').split(' ')
+        [a,b,c] = i.replace('    ',' ').replace('\n','').split(' ')
         rssiA.append(a)
         rssiB.append(b)
         rssiC.append(c)
@@ -447,7 +447,7 @@ def get_intersections(x0, y0, r0, x1, y1, r1):
         return x,y
 
 def trilaterateCircle(xCirc,yCirc,intersect,points):
-    deltaDist = [100000,100000,100000]
+    deltaDist = [1000000,1000000,1000000]
     dist = [0,0,0]
     x = [0,0,0]
     y = [0,0,0]
@@ -630,7 +630,7 @@ def errorComp(x, y, xAve, yAve, xAct, yAct, xOld, yOld, xAveOld, yAveOld, latAct
     for i in range(len(latKClusters)):
         centVave.append(haversine(latKClusters[i],longKClusters[i],latAve[0],longAve[0]))
 
-    # Computed Coordinates vs. K-means centroid
+    # K-means Computed Coordinates vs. K-means centroid
     compVcent = list()
     for i in range(len(latKClusters)):
         for k in range(len(lat)):
@@ -741,11 +741,14 @@ def kalman_filter(signal, A, H, Q, R):
 ################## CHANGE THIS ACCORDINGLY ##################  
 # rssiA, rssiB, rssiC, dtn, phoneA = importCSV(save_destination, startrow, endrow)
 # Format - Date: "2021-10-30" Time and Phone : "14:43:54 09976500624" 14:43:54 09976500624 14:43:57 09976500623
-# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-13", "14:43:54 09976500624")
+# rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct =  importDatabase("2021-11-07", "09:23:51 09976500605")
+
+# Simulation Retrieval
 rssiA, rssiB, rssiC, dtn, phoneA, latg, longg, latAct, longAct = importSimulationResults()
+nA = nB = nC = n = 2.2
+
 
 # # Compensation
-
 # 624
 # for i in range(len(rssiB)):
 #     rssiA[i] = str(int(int(rssiA[i]) - 5))
@@ -772,6 +775,10 @@ rssiC_int = [float(i) for i in rssiC]
 rssiA_kalman = kalman_filter(rssiA_int, A=1, H=1, Q=0.005, R=1)
 rssiB_kalman = kalman_filter(rssiB_int, A=1, H=1, Q=0.005, R=1)
 rssiC_kalman = kalman_filter(rssiC_int, A=1, H=1, Q=0.005, R=1)
+
+# rssiA_kalman = rssiA_int
+# rssiB_kalman = rssiB_int
+# rssiC_kalman = rssiC_int
 
 
 with open(save_destination+'Kalman Comparison.csv', mode='a') as clogs:
@@ -1126,8 +1133,8 @@ fig += 1
     
 # DBSCAN Plot
 plt.figure(fig)
-plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
 plt.scatter(dbData[dbscan.labels_==-1,0], dbData[dbscan.labels_==-1,1], marker='x', label='Noise', c='darkkhaki', s=15)
+plt.scatter(dbData[dbscan.labels_>-1,0], dbData[dbscan.labels_>-1,1], label ='Mobile Node Clusters', c=dbscan.labels_[dbscan.labels_>-1], cmap='brg', s=5)
 plt.scatter(xAct, yAct, marker='*', label='Actual Point', c='darkorange', s=30)
 plt.scatter(xg, yg, marker='1', label='Gateway Locations', c='black', s=30)
 plt.scatter([], [], marker = ' ', label=' ') # Dummy Plots for Initial Parameters
@@ -1151,7 +1158,6 @@ plt.savefig(save_destination + dtn + ' 0' + phoneA + ' DBSCAN.jpg', bbox_inches=
 fig += 1
 
 # DBSCAN Plot Folium Mapping
-
 # Cartesian to GPS Coordinate Conversion
 latData, longData = cartToGPS(dbData[dbscan.labels_>-1,0],dbData[dbscan.labels_>-1,1])
 latAve, longAve = cartToGPS(np.array([xAve]), np.array([yAve]))
@@ -1291,6 +1297,22 @@ compVactAve = sum(compVact)/len(compVact)
 compVactMax = max(compVact)
 compVactMin = min(compVact)
 
+# DBSCAN Variables for Error Computation
+DBSCAN_X_Coor = dbData[dbscan.labels_>-1,0]
+DBSCAN_Y_Coor = dbData[dbscan.labels_>-1,1]
+DBSCAN_Lat, DBSCAN_Long = cartToGPS(DBSCAN_X_Coor,DBSCAN_Y_Coor)
+
+# Clustered Computed Coordinates vs. Actual Distance
+FILTERED_TO_ACT_DISTANCE = list()
+for i in range(len(DBSCAN_X_Coor)):
+    FILTERED_TO_ACT_DISTANCE.append(haversine(DBSCAN_Lat[i],DBSCAN_Long[i],latAct[0],longAct[0]))
+ERROR_FILTERED = sum(FILTERED_TO_ACT_DISTANCE)/len(FILTERED_TO_ACT_DISTANCE)
+ERROR_FILTERED_MAX = max(FILTERED_TO_ACT_DISTANCE)
+ERROR_FILTERED_MIN = min(FILTERED_TO_ACT_DISTANCE)
+
+print(compVactAve)
+print(ERROR_FILTERED)
+
 # Plot Old vs Trilateration Trilateration Graph
 plt.figure(fig)
 plt.scatter(xOld, yOld, label='Standard Trilateration', c='red', s=20)
@@ -1318,9 +1340,9 @@ plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03))
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' OldVImprovedTrilateration.jpg', bbox_inches='tight')
 fig += 1
 
-# Plot the behavior of the error
+# Plot the behavior of the error of raw trilateration
 plt.figure(fig)
-plt.plot(compVact, 'r', label='Trilateration Error')
+plt.plot(compVact, 'r', label='Raw Trilateration Error')
 plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*compVactAve , 'r--', label='Average Error')
 # plt.plot(np.arange(len(distanceAf)),np.ones([1,len(distanceAf)])[0]*comp_distanceAf, 'r--', label='Actual Gateway A Distance')
 plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
@@ -1333,11 +1355,33 @@ plt.plot([], [], ' ', label='Output:')
 plt.plot([], [], ' ', label='Average Error = '+str("{:.4f}".format(compVactAve[0])))
 plt.plot([], [], ' ', label='Max Error = '+str("{:.4f}".format(compVactMax[0])))
 plt.plot([], [], ' ', label='Min Error = '+str("{:.4f}".format(compVactMin[0])))
-plt.title(dtn + ' 0' + phoneA  + ' Error Behavior')
+plt.title(dtn + ' 0' + phoneA  + ' Raw Error Behavior')
 plt.xlabel('Datapoint')
 plt.ylabel('Distance [Meters]')
 plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
 plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ErrorBehavior.jpg', bbox_inches='tight')
+plt.close('all')
+fig += 1
+
+# Plot the behavior of the error of filtered clustering output
+plt.figure(fig)
+plt.plot(FILTERED_TO_ACT_DISTANCE, 'r', label='Clustered Trilateration Error')
+plt.plot(np.arange(len(FILTERED_TO_ACT_DISTANCE)),np.ones([1,len(FILTERED_TO_ACT_DISTANCE)])[0]*ERROR_FILTERED , 'r--', label='Average Clustered Error')
+plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.plot([], [], ' ', label='Parameters:')
+plt.plot([], [], ' ', label='n = '+str(n))
+plt.plot([], [], ' ', label='$D_{RSSIo} = $'+str(dro))
+plt.plot([], [], ' ', label='$RSSI_o = $'+str(roRSSI))
+plt.plot([], [], ' ', label=' ') # Dummy Plots for Initial Parameters
+plt.plot([], [], ' ', label='Output:')
+plt.plot([], [], ' ', label='Average Error = '+str("{:.4f}".format(ERROR_FILTERED[0])))
+plt.plot([], [], ' ', label='Max Error = '+str("{:.4f}".format(ERROR_FILTERED_MAX[0])))
+plt.plot([], [], ' ', label='Min Error = '+str("{:.4f}".format(ERROR_FILTERED_MIN[0])))
+plt.title(dtn + ' 0' + phoneA  + ' Clustered Error Behavior')
+plt.xlabel('Datapoint')
+plt.ylabel('Distance [Meters]')
+plt.legend(loc='upper left', bbox_to_anchor=(1, 1.03)) 
+plt.savefig(save_destination + dtn + ' 0' + phoneA + ' ClusteredErrorBehavior.jpg', bbox_inches='tight')
 plt.close('all')
 fig += 1
 
